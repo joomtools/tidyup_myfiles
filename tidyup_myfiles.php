@@ -1,6 +1,6 @@
 <?php
 /**
- * Tinyup my files
+ * Tidyup my files
  *
  * Hier die Beschreibung
  *
@@ -8,7 +8,7 @@
  * @copyright   Copyright since 2018 by JoomTools. All rights reserved.
  * @license     GNU General Public License version 3 or later; see LICENSE
  *
- * @version     1.0.0
+ * @version     1.0.1
  */
 
 const _JEXEC          = 1;
