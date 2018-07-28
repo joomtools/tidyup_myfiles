@@ -8,7 +8,7 @@
  * @copyright   Copyright since 2018 by JoomTools. All rights reserved.
  * @license     GNU General Public License version 3 or later; see LICENSE
  *
- * @version     1.0.2
+ * @version     1.0.4
  */
 
 const _JEXEC          = 1;
@@ -97,10 +97,11 @@ const _EXCLUDE_TABLES = array(
 $startTime = microtime(1);
 $startMem  = memory_get_usage();
 
-set_time_limit(0);
-ini_set('max_execution_time', 0);
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+@set_time_limit(0);
+@ini_set('max_execution_time', 0);
+@error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
+@ini_set('display_errors', 1);
+@ini_set('track_errors', 1);
 
 // Load system defines
 if (file_exists(dirname(getcwd()) . '/defines.php'))
@@ -168,7 +169,7 @@ if ($rename === false)
 		$output[] = '<br /><strong>ext=pdf,png,doc</strong> (Dateiendungen nach denen gesucht werden soll - [default: pdf,png,jpg,jpeg])';
 		$output[] = '<br /><strong>folder=images/banner</strong> (Ordner im Joomla Rootverzeichnis, indem rekursiv nach Dateien gesucht werden soll - [default: images])';
 		$output[] = '<br /><span style="color: red;"><strong>debug=off</strong> (Wird dieser Parameter gesetzt, wird der Testmodus abgestellt und die Änderungen durchgeführt)</span>';
-		$output[] = '<br /><h4>' . Profiler::getInstance('Tinyup my files')->mark('Total') . '</h4>';
+		$output[] = '<br /><h4>' . Profiler::getInstance('Tidyup my files')->mark('Total') . '</h4>';
 		die('<div style="font-size: 125%;">' . implode('', $output) . '</div>');
 	}
 }
@@ -178,7 +179,7 @@ $extUpper   = explode(',', strtoupper($input->getString('ext', 'pdf,png,jpg,jpeg
 $ext        = array_merge($extLower, $extUpper);
 $debug      = strtolower($input->getString('debug', ''));
 $extensions = '\.' . implode('|\.', $ext);
-$folder     = $input->getPath('folder', 'images');
+$folder     = str_replace('\\', '/', $input->getPath('folder', 'images'));
 $folder     = JPATH_ROOT . '/' . trim($folder, '\\/');
 $files      = JFolder::files($folder, $extensions, true, true);
 $arrFiles   = [];
@@ -200,8 +201,9 @@ foreach ($files as $file)
 	$urlsafe      = '<span style="color: red;">URL-Safe: </span>';
 	$newname      = OutputFilter::stringURLSafe(JFile::stripExt($oldname)) . '.' . $fileExt;
 	$source       = ltrim(str_replace(JPATH_ROOT, '', $file), '\\/');
+	$source       = str_replace('\\', '/', $source);
 	$relativePath = str_replace($oldname, '', $source);
-	$dest         = $relativePath . $newname;
+	$dest         = str_replace('\\', '/', $relativePath) . $newname;
 
 	if ($delete === true)
 	{
@@ -313,22 +315,22 @@ foreach ($arrTables as $strTable)
 
 			$blnSerialized = false;
 			$blnJson       = false;
-			$tmp           = @unserialize($v);
+			$tmp           = @json_decode($v);
 
-			if ($tmp !== false)
+			if ($tmp !== null)
 			{
-				$blnSerialized = true;
-				$v             = $tmp;
+				$blnJson = true;
+				$v       = $tmp;
 			}
 
-			if ($blnSerialized === false)
+			if ($blnJson === false)
 			{
-				$tmp = @json_decode($v);
+				$tmp = @unserialize($v);
 
 				if ($tmp !== null)
 				{
-					$blnJson = true;
-					$v       = $tmp;
+					$blnSerialized = true;
+					$v             = $tmp;
 				}
 			}
 
@@ -387,16 +389,16 @@ foreach ($arrTables as $strTable)
 
 			$w = $v;
 
-			if ($blnJson)
-			{
-				$v = $row[$k];
-				$w = json_encode($w);
-			}
-
 			if ($blnSerialized)
 			{
 				$v = $row[$k];
 				$w = serialize($w);
+			}
+
+			if ($blnJson)
+			{
+				$v = $row[$k];
+				$w = json_encode($w);
 			}
 
 			if ($rename === true && $dbFound === true)
@@ -588,4 +590,3 @@ function array_str_replace($strSearch, $strReplace, $arrData)
 
 	return $arrData;
 }
-
