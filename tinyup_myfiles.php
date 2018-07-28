@@ -11,7 +11,88 @@
  * @version     1.0.0
  */
 
-const _JEXEC = 1;
+const _JEXEC          = 1;
+const _EXCLUDE_TABLES = array(
+	'_ak_profiles',
+	'_ak_stats',
+	'_ak_storage',
+	'_akeeba_common',
+	'_assets',
+	'_associations',
+//	'_banner_clients',
+//	'_banner_tracks',
+//	'_banners',
+//	'_categories',
+//	'_contact_details',
+//	'_content',
+	'_content_frontpage',
+	'_content_rating',
+//	'_content_types',
+	'_contentitem_tag_map',
+	'_core_log_searches',
+//	'_extensions',
+	'_fields',
+//	'_fields_categories',
+//	'_fields_groups',
+//	'_fields_values',
+//	'_finder_filters',
+//	'_finder_links',
+	'_finder_links_terms0',
+	'_finder_links_terms1',
+	'_finder_links_terms2',
+	'_finder_links_terms3',
+	'_finder_links_terms4',
+	'_finder_links_terms5',
+	'_finder_links_terms6',
+	'_finder_links_terms7',
+	'_finder_links_terms8',
+	'_finder_links_terms9',
+	'_finder_links_termsa',
+	'_finder_links_termsb',
+	'_finder_links_termsc',
+	'_finder_links_termsd',
+	'_finder_links_termse',
+	'_finder_links_termsf',
+	'_finder_taxonomy',
+	'_finder_taxonomy_map',
+	'_finder_terms',
+	'_finder_terms_common',
+	'_finder_tokens',
+	'_finder_tokens_aggregate',
+	'_finder_types',
+	'_languages',
+//	'_menu',
+	'_menu_types',
+//	'_messages',
+	'_messages_cfg',
+//	'_modules',
+	'_modules_menu',
+//	'_newsfeeds',
+//	'_overrider',
+	'_patchtester_pulls',
+	'_patchtester_tests',
+//	'_postinstall_messages',
+//	'_redirect_links',
+	'_schemas',
+	'_session',
+//	'_tags',
+//	'_template_styles',
+	'_ucm_base',
+//	'_ucm_content',
+//	'_ucm_history',
+	'_update_sites',
+	'_update_sites_extensions',
+	'_updates',
+	'_user_keys',
+	'_user_notes',
+	'_user_profiles',
+	'_user_usergroup_map',
+	'_usergroups',
+	'_users',
+	'_utf8_conversion',
+	'_viewlevels',
+//	'_wf_profiles',
+);
 
 $startTime = microtime(1);
 $startMem  = memory_get_usage();
@@ -180,7 +261,8 @@ if (empty($arrFiles))
 	die('Keine Dateien zum Verarbeiten gefunden.');
 }
 
-echo '<h3>Starte Suche in Datenbank....</h3>';
+echo '<h3>Starte Suche nach Datein in der Datenbank ....</h3>';
+echo '<br /><br />';
 
 $db           = Factory::getDbo();
 $arrTables    = $db->getTableList();
@@ -188,6 +270,11 @@ $tableQueries = [];
 
 foreach ($arrTables as $strTable)
 {
+	if (in_array(str_replace($db->getPrefix(), '_', $strTable), _EXCLUDE_TABLES))
+	{
+		continue;
+	}
+
 	$tblColumns = $db->getTableColumns($strTable);
 	$columns    = [];
 
@@ -205,6 +292,7 @@ foreach ($arrTables as $strTable)
 	}
 
 	$query = $db->getQuery(true);
+
 	$query->select('*')
 		->from($db->qn($strTable));
 	$db->setQuery($query);
@@ -240,23 +328,25 @@ foreach ($arrTables as $strTable)
 				}
 			}
 
-			$w = false;
+			$w       = false;
+			$dbFound = false;
 
-			foreach ($arrFiles as $filename => $value)
+			foreach ($arrFiles as &$fileParams)
 			{
+
 				if (is_object($v))
 				{
 					$v = get_object_vars($v);
 				}
 
-				if (is_array($v) && array_strpos($v, $value['src']) !== false)
+				if (is_array($v) && array_strpos($v, $fileParams['src']) !== false)
 				{
-					$w = array_str_replace($value['src'], $value['dest'], $v);
+					$w = array_str_replace($fileParams['src'], $fileParams['dest'], $v);
 				}
 
-				if (!is_array($v) && strpos($v, $value['src']) !== false)
+				if (!is_array($v) && strpos($v, $fileParams['src']) !== false)
 				{
-					$w = str_replace($value['src'], $value['dest'], $v);
+					$w = str_replace($fileParams['src'], $fileParams['dest'], $v);
 				}
 
 				if ($w !== false)
@@ -265,19 +355,23 @@ foreach ($arrTables as $strTable)
 
 					if ($delete === true)
 					{
-						$arrFiles[$filename]['delete'] = false;
+						$fileParams['delete'] = false;
 					}
 
-					$arrFiles[$filename]['tabellen'][] = $strTable;
-					$arrFiles[$filename]['tabellen']   = ArrayHelper::arrayUnique($arrFiles[$filename]['tabellen']);
+					if ($rename === true && $fileParams['src'] != $fileParams['dest'])
+					{
+						$fileParams['tabellen'][] = $strTable;
+						$fileParams['tabellen']   = ArrayHelper::arrayUnique($fileParams['tabellen']);
+						$fileParams['rename']     = true;
+						$dbFound                  = true;
+					}
 				}
 
-				if (($rename === true && $value['src'] != $value['dest'] && $w !== false)
-					|| ($w === false && $all === true))
+				if ($w === false && $all === true)
 				{
-					if ($arrFiles[$filename]['delete'] === false)
+					if ($fileParams['delete'] === false)
 					{
-						$arrFiles[$filename]['rename'] = true;
+						$fileParams['rename'] = true;
 					}
 				}
 			}
@@ -299,22 +393,16 @@ foreach ($arrTables as $strTable)
 				$w = serialize($w);
 			}
 
-			if ($rename === true)
+			if ($rename === true && $dbFound === true)
 			{
-				$query = $db->getQuery(true);
+				$tableQuery = $db->getQuery(true);
 
-				$query->update($db->qn($strTable))
+				$tableQuery->update($db->qn($strTable))
 					->set($db->qn($k) . '=' . $db->q($w))
 					->where($db->qn($k) . '=' . $db->q($v));
 
-				$tableQueries[$strTable][] = htmlspecialchars((string) $query);
-
-				if ($debug === 'off')
-				{
-					$db->setQuery($query)->execute();
-				}
+				$tableQueries[$strTable][] = $tableQuery;
 			}
-			echo '<br />';
 		}
 	}
 }
@@ -346,21 +434,44 @@ foreach ($arrFiles as $file)
 		}
 		else
 		{
-			foreach ($file['tabellen'] as $tabelle)
+			if (!empty($file['tabellen']))
 			{
-				if (!empty($tableQueries[$tabelle]))
-				{
-					$output['rename'][] = ' in der Tabelle <strong>' . $tabelle . '</strong> gefunden und mit dem SQL-Query<br />';
-					$output['rename'][] = implode('<br />', $tableQueries[$tabelle]) . '<br /><br />';
-					$output['rename'][] = 'ausgetauscht und';
-				}
+				$output['rename'][] = ' in den Tabellen <strong>' . implode(', ', $file['tabellen']) . '</strong> gefunden und';
 			}
 		}
 
 		$output['rename'][] = ' in <strong>' . $delPath . $destFile . '</strong> umbenannt.<br /><br /><br />';
 	}
 
-	if ($debug === 'off')
+	if (!empty($tableQueries))
+	{
+		foreach ($tableQueries as $tableKey => $tableValues)
+		{
+			if (!empty($tableValues))
+			{
+				$output['table'][] = '<h4>Für die Tabelle \'' . $tableKey . '\' wurden folgende SQL-Queries ausgeführt:</h4>';
+
+				foreach ($tableValues as $key => $query)
+				{
+					if ($debug === 'off')
+					{
+						if (!$db->setQuery($query)->execute())
+						{
+							die('fehler beim schreiben des Querys ' . htmlspecialchars((string) $query));
+						}
+					}
+
+					$output['table'][] = htmlspecialchars((string) $query) . '<br />';
+
+					unset($tableQueries[$tableKey][$key]);
+				}
+
+				$output['table'][] = '<br /><br /><br />';
+			}
+		}
+	}
+
+	if ($debug === 'off' && ($file['rename'] === true || $file['delete'] === true))
 	{
 		// If the destination directory doesn't exist we need to create it
 		if (!file_exists(dirname(JPATH_ROOT . '/' . $delPath . $destFile)))
@@ -374,26 +485,57 @@ foreach ($arrFiles as $file)
 	}
 }
 
-if (!empty($output['rename']))
+if ($rename === true)
 {
-	echo '<h2 style="color: darkgreen;">Bearbeitete Dateien</h2>';
-	echo '<div style="color: darkgreen;">' . implode('', $output['rename']) . '</div>';
+	echo '<h2 style="color: darkgreen;">Umbenannte Dateien</h2>';
+
+	if (!empty($output['rename']))
+	{
+		echo '<div style="color: darkgreen;">' . implode('', $output['rename']) . '</div>';
+	}
+	else
+	{
+		echo '<div style="color: darkgreen;">Es mussten keine Dateien umbenannt werden.</div>';
+	}
+
+	echo '<br /><br />';
+
+	echo '<h2 style="color: darkgreen;">Bearbeitete Tabellen</h2>';
+
+	if (!empty($output['table']))
+	{
+		echo '<div style="color: darkgreen;">' . implode('', $output['table']) . '</div>';
+	}
+	else
+	{
+		echo '<div style="color: darkgreen;">Es mussten keine Tabelle bearbeitet werden.</div>';
+	}
+
 	echo '<br /><br />';
 }
 
-if (!empty($output['delete']))
+if ($delete === true)
 {
-	echo '<h2 style="color: orange;">Zur Löschung vorgeschlagen</h2>';
-	echo '<div style="color: orange;">' . implode('', $output['delete']) . '</div>';
+	echo '<h2 style="color: orange;">Zur Löschung vorgeschlage Dateien, die nicht in der Datenbank verwendet werden</h2>';
+
+	if (!empty($output['delete']))
+	{
+		echo '<div style="color: orange;">' . implode('', $output['delete']) . '</div>';
+	}
+	else
+	{
+		echo '<div style="color: darkgreen;">Alle Dateien wurden in der Datenbank gefunden.</div>';
+	}
+
 	echo '<br /><br />';
 }
 
 echo '<br />';
 echo '<h4>' . Profiler::getInstance('Tinyup my files')->mark('Total') . '</h4>';
+echo '<br /><br /><br />';
 
 if ($debug !== 'off')
 {
-	echo '<br /><br /><br />';
 	echo '<h1>Debug Modus aktiv, nix passiert :-)</h1>';
 	echo '<br /><br /><br />';
 }
