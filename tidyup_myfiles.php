@@ -8,7 +8,7 @@
  * @copyright   Copyright since 2018 by JoomTools. All rights reserved.
  * @license     GNU General Public License version 3 or later; see LICENSE
  *
- * @version     1.0.1
+ * @version     1.0.2
  */
 
 const _JEXEC          = 1;
@@ -131,8 +131,8 @@ use Joomla\CMS\Profiler\Profiler;
 use Joomla\Input\Input;
 use Joomla\Utilities\ArrayHelper;
 
-Profiler::getInstance('Tinyup my files')->setStart($startTime, $startMem)->mark('Total');
-echo '<h1>Tinyup my files</h1>';
+Profiler::getInstance('Tidyup my files')->setStart($startTime, $startMem)->mark('Total');
+echo '<h1>Tidyup my files</h1>';
 
 $input = new Input;
 
@@ -245,7 +245,7 @@ if (!empty($exists))
 	foreach ($exists as $exist)
 	{
 		$output['exist'][] = 'Die Datei <strong>' . $exist['src'] . '</strong> wurde nicht verarbeitet.';
-		$output['exist'][] = ' Die Zieldatei <strong>' . $exist['dest'] . '</strong> ist bereits vorhanden, bitte Prüfen.<br /><br />';
+		$output['exist'][] = ' Die Zieldatei <strong>' . $exist['dest'] . '</strong> ist bereits vorhanden, bitte prüfen.<br /><br />';
 	}
 }
 
@@ -261,8 +261,10 @@ if (empty($arrFiles))
 	die('Keine Dateien zum Verarbeiten gefunden.');
 }
 
-echo '<h3>Starte Suche nach Datein in der Datenbank ....</h3>';
-echo '<br /><br />';
+echo '<h3>Starte Suche nach Datein in der Datenbank ....';
+
+ob_flush();
+flush();
 
 $db           = Factory::getDbo();
 $arrTables    = $db->getTableList();
@@ -405,7 +407,14 @@ foreach ($arrTables as $strTable)
 			}
 		}
 	}
+
+	echo '.';
+
+	ob_flush();
+	flush();
 }
+echo '</h3>';
+echo '<br /><br />';
 
 $output = [];
 
@@ -531,7 +540,7 @@ if ($delete === true)
 }
 
 echo '<br />';
-echo '<h4>' . Profiler::getInstance('Tinyup my files')->mark('Total') . '</h4>';
+echo '<h4>' . Profiler::getInstance('Tidyup my files')->mark('Total') . '</h4>';
 echo '<br /><br /><br />';
 
 if ($debug !== 'off')
