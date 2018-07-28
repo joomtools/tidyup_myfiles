@@ -173,7 +173,9 @@ if ($rename === false)
 	}
 }
 
-$ext        = explode(',', $input->getString('ext', 'pdf,png,jpg,jpeg'));
+$extLower   = explode(',', strtolower($input->getString('ext', 'pdf,png,jpg,jpeg')));
+$extUpper   = explode(',', strtoupper($input->getString('ext', 'pdf,png,jpg,jpeg')));
+$ext        = array_merge($extLower, $extUpper);
 $debug      = strtolower($input->getString('debug', ''));
 $extensions = '\.' . implode('|\.', $ext);
 $folder     = $input->getPath('folder', 'images');
@@ -304,7 +306,7 @@ foreach ($arrTables as $strTable)
 	{
 		foreach ($row as $k => $v)
 		{
-			if (!in_array($k, $columns))
+			if (!in_array($k, $columns) || empty($v))
 			{
 				continue;
 			}
@@ -330,11 +332,11 @@ foreach ($arrTables as $strTable)
 				}
 			}
 
-			$w       = false;
 			$dbFound = false;
 
 			foreach ($arrFiles as &$fileParams)
 			{
+				$w = false;
 
 				if (is_object($v))
 				{
@@ -378,10 +380,12 @@ foreach ($arrTables as $strTable)
 				}
 			}
 
-			if ($w === false)
+			if ($dbFound === false)
 			{
 				continue;
 			}
+
+			$w = $v;
 
 			if ($blnJson)
 			{
