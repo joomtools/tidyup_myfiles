@@ -8,11 +8,15 @@
  * @copyright   Copyright since 2018 by JoomTools. All rights reserved.
  * @license     GNU General Public License version 3 or later; see LICENSE
  *
- * @version     1.0.4
+ * @version     1.0.5
  */
 
 const _JEXEC          = 1;
+const _ONLY_FILENAMES = array(
+	'_rsgallery2_files',
+);
 const _EXCLUDE_TABLES = array(
+	'_advancedmodules',
 	'_ak_profiles',
 	'_ak_stats',
 	'_ak_storage',
@@ -60,6 +64,12 @@ const _EXCLUDE_TABLES = array(
 	'_finder_tokens',
 	'_finder_tokens_aggregate',
 	'_finder_types',
+	'_jevents_catmap',
+	'_jevents_exception',
+	'_jevents_filtermap',
+	'_jevents_repetition',
+	'_jevents_rrule',
+	'_jev_users',
 	'_languages',
 //	'_menu',
 	'_menu_types',
@@ -71,8 +81,11 @@ const _EXCLUDE_TABLES = array(
 //	'_overrider',
 	'_patchtester_pulls',
 	'_patchtester_tests',
+	'_phocamaps_icon',
+	'_phocamaps_map',
 //	'_postinstall_messages',
 //	'_redirect_links',
+	'_rsgallery2_config',
 	'_schemas',
 	'_session',
 //	'_tags',
@@ -92,6 +105,12 @@ const _EXCLUDE_TABLES = array(
 	'_utf8_conversion',
 	'_viewlevels',
 //	'_wf_profiles',
+	'_zoo_category_item',
+	'_zoo_rating',
+	'_zoo_search_index',
+	'_zoo_tag',
+	'_zoo_version',
+	'_zoo_zoofilter_searches',
 );
 
 $startTime = microtime(1);
@@ -338,15 +357,15 @@ $arrTables    = $db->getTableList();
 $tableQueries = [];
 $sql          = [];
 
+// file_put_contents(JPATH_ROOT . '/cli/tabellen.txt', implode("\n", $arrTables));
+// die;
+
 foreach ($arrTables as $strTable)
 {
 	if (in_array(str_replace($db->getPrefix(), '_', $strTable), _EXCLUDE_TABLES))
 	{
 		continue;
 	}
-
-	$startTimeInDbSearch = microtime(1);
-	$startMemInDbSearch = memory_get_usage();
 
 	$tblColumns = $db->getTableColumns($strTable);
 	$columns    = [];
@@ -371,7 +390,7 @@ foreach ($arrTables as $strTable)
 	$db->setQuery($query);
 	$stmt = $db->loadAssocList();
 
-	echo 'Durchsuche <strong> ' . $strTable . '</strong> mit <strong>' . count($stmt) . '</strong> Datensätzen ...<br />';
+	echo 'Durchsuche <strong>' . $strTable . '</strong> mit <strong>' . count($stmt) . '</strong> Datensätzen ...<br />';
 
 	ob_flush();
 	flush();
@@ -408,49 +427,57 @@ foreach ($arrTables as $strTable)
 
 			$dbFound = false;
 
-			foreach ($arrFiles as &$fileParams)
+			foreach ($arrFiles as $fileKey => $fileParams)
 			{
 				$w = false;
+				$fileSrc = $fileParams['src'];
+				$fileDest = $fileParams['dest'];
+
+				if (in_array(str_replace($db->getPrefix(), '_', $strTable), _ONLY_FILENAMES))
+				{
+					$fileSrc = basename($fileParams['src']);
+					$fileDest = basename($fileParams['dest']);
+				}
 
 				if (is_object($v))
 				{
 					$v = get_object_vars($v);
 				}
 
-				if (is_array($v) && array_strpos($v, $fileParams['src']) !== false)
+				if (is_array($v) && array_strpos($v, $fileSrc) !== false)
 				{
-					$fileParams['delete'] = false;
+					$arrFiles[$fileKey]['delete'] = false;
 
-					if ($rename === true && $fileParams['src'] != $fileParams['dest'])
+					if ($rename === true && $fileSrc != $fileDest)
 					{
-						$w = array_str_replace($fileParams['src'], $fileParams['dest'], $v);
+						$w = array_str_replace($fileSrc, $fileDest, $v);
 					}
 				}
 
-				if (!is_array($v) && strpos($v, $fileParams['src']) !== false)
+				if (!is_array($v) && strpos($v, $fileSrc) !== false)
 				{
-					$fileParams['delete'] = false;
+					$arrFiles[$fileKey]['delete'] = false;
 
-					if ($rename === true && $fileParams['src'] != $fileParams['dest'])
+					if ($rename === true && $fileSrc != $fileDest)
 					{
-						$w = str_replace($fileParams['src'], $fileParams['dest'], $v);
+						$w = str_replace($fileSrc, $fileDest, $v);
 					}
 				}
 
 				if ($w !== false)
 				{
 					$v                        = $w;
-					$fileParams['tabellen'][] = $strTable;
-					$fileParams['tabellen']   = ArrayHelper::arrayUnique($fileParams['tabellen']);
-					$fileParams['rename']     = true;
+					$arrFiles[$fileKey]['tabellen'][] = $strTable;
+					$arrFiles[$fileKey]['tabellen']   = ArrayHelper::arrayUnique($arrFiles[$fileKey]['tabellen']);
+					$arrFiles[$fileKey]['rename']     = true;
 					$dbFound                  = true;
 				}
 
 				if ($w === false && $all === true)
 				{
-					if ($fileParams['delete'] === false)
+					if ($arrFiles[$fileKey]['delete'] === false)
 					{
-						$fileParams['rename'] = true;
+						$arrFiles[$fileKey]['rename'] = true;
 					}
 				}
 			}
@@ -611,16 +638,15 @@ if ($delete === true)
 	echo '<br /><br />';
 }
 
-echo '<br />';
-//echo '<h4>' . Profiler::getInstance('Tidyup my files')->mark('Total') . '</h4>';
-echo '<h4>' . Profiler::getInstance('Tidyup my files')->setStart($startTime, $startMem)->mark('Total') . '</h4>';
-echo '<br /><br /><br />';
-
 if ($debug !== 'off')
 {
 	echo '<h1>Debug Modus aktiv, nix passiert :-)</h1>';
 	echo '<br /><br /><br />';
 }
+
+echo '<br />';
+echo '<h4>' . Profiler::getInstance('Tidyup my files')->mark('Ende der Verarbeitung') . '</h4>';
+echo '<br /><br /><br />';
 
 echo '</pre>';
 
