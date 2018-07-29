@@ -99,7 +99,7 @@ $startMem  = memory_get_usage();
 
 @set_time_limit(0);
 @ini_set('max_execution_time', 0);
-@error_reporting(E_ALL & ~E_NOTICE & ~E_DEPRECATED);
+@error_reporting(E_ERROR | E_WARNING | E_PARSE);
 @ini_set('display_errors', 1);
 @ini_set('track_errors', 1);
 
@@ -132,7 +132,8 @@ use Joomla\CMS\Profiler\Profiler;
 use Joomla\Input\Input;
 use Joomla\Utilities\ArrayHelper;
 
-Profiler::getInstance('Tidyup my files')->setStart($startTime, $startMem)->mark('Total');
+Profiler::getInstance('Tidyup my files')->setStart($startTime, $startMem);
+
 echo '<h1>Tidyup my files</h1>';
 
 $input = new Input;
@@ -146,8 +147,6 @@ $lang->load('files_joomla.sys', JPATH_SITE, null, false, false)
 // Fallback to the files_joomla file in the default language
 || $lang->load('files_joomla.sys', JPATH_SITE, null, true);
 
-//jimport('joomla.filesystem.file');
-//jimport('joomla.filesystem.folder');
 \JLoader::import('joomla.filesystem.file');
 \JLoader::import('joomla.filesystem.folder');
 
@@ -186,6 +185,45 @@ $arrFiles   = [];
 $exists     = [];
 
 echo '<pre>';
+echo '<h2>Verwendete Parameter</h2>';
+
+if ($rename === true)
+{
+	echo '- rename=1<br />';
+}
+
+if ($all === true)
+{
+	if ($delete === true)
+	{
+		echo '<span style="color:#999">- all=1</span><br />';
+	}
+	else
+	{
+		echo '- all=1<br />';
+	}
+}
+
+if ($delete === true)
+{
+	echo '- delete=1<br />';
+}
+
+if (!empty($input->getString('ext')))
+{
+	echo '- ext=' . $input->getString('ext') . '<br />';
+}
+
+if (!empty($input->getString('folder')))
+{
+	echo '- folder=' . $input->getPath('folder') . '<br />';
+}
+
+echo '<br /><br />';
+
+ob_flush();
+flush();
+
 echo '<h2>Gefundene Dateien mit der Endung: .' . implode(', .', $ext) . '</h2>';
 
 foreach ($files as $file)
@@ -228,6 +266,7 @@ foreach ($files as $file)
 		);
 
 		echo $urlsafe . '<span style="color: red;">' . $source . '</span><br />';
+
 		continue;
 	}
 
@@ -240,17 +279,28 @@ foreach ($files as $file)
 	);
 
 	echo $urlsafe . $source . '<br />';
+
+	ob_flush();
+	flush();
 }
 
-echo '<br /><br />';
+if (!empty($arrFiles) || !empty($exists))
+{
+	echo '<br />';
+	echo 'Es wurde(n) insgesamt ' . ((int) count($arrFiles) + (int) count($exists)) . ' Datei(en) gefunden.';
+	echo '<br /><br />';
+}
+
 
 if (!empty($exists))
 {
 	foreach ($exists as $exist)
 	{
-		$output['exist'][] = 'Die Datei <strong>' . $exist['src'] . '</strong> wurde nicht verarbeitet.';
-		$output['exist'][] = ' Die Zieldatei <strong>' . $exist['dest'] . '</strong> ist bereits vorhanden, bitte prüfen.<br /><br />';
+		$output['exist'][] = 'Die Datei <strong>' . $exist['src'] . '</strong> wird nicht verarbeitet.';
+		$output['exist'][] = ' Die Zieldatei <strong>' . $exist['dest'] . '</strong> ist bereits vorhanden, bitte prüfen.<br />';
 	}
+
+	$output['exist'][] = 'Davon ' . (int) count($exists) . ' Datei(en) nicht verarbeitet.<br /><br />';
 }
 
 if (!empty($output['exist']))
@@ -265,7 +315,15 @@ if (empty($arrFiles))
 	die('Keine Dateien zum Verarbeiten gefunden.');
 }
 
-echo '<h3>Starte Suche nach Datein in der Datenbank ....';
+
+unset($files, $file);
+
+echo '<br />';
+//echo '<h4>' . Profiler::getInstance('Tidyup my files')->mark('Total') . '</h4>';
+echo '<h4>' . Profiler::getInstance('Tidyup my files')->mark('Dateisuche in ' . $folder) . '</h4>';
+echo '<br /><br /><br />';
+
+echo '<h2>Starte Suche nach Datein in der Datenbank ....</h2>';
 
 ob_flush();
 flush();
@@ -281,6 +339,9 @@ foreach ($arrTables as $strTable)
 	{
 		continue;
 	}
+
+	$startTimeInDbSearch = microtime(1);
+	$startMemInDbSearch = memory_get_usage();
 
 	$tblColumns = $db->getTableColumns($strTable);
 	$columns    = [];
@@ -304,6 +365,11 @@ foreach ($arrTables as $strTable)
 		->from($db->qn($strTable));
 	$db->setQuery($query);
 	$stmt = $db->loadAssocList();
+
+	echo 'Durchsuche <strong> ' . $strTable . '</strong> mit <strong>' . count($stmt) . '</strong> Datensätzen ...';
+
+	ob_flush();
+	flush();
 
 	foreach ($stmt as $row)
 	{
@@ -417,12 +483,12 @@ foreach ($arrTables as $strTable)
 		}
 	}
 
-	echo '.';
+	echo '<h4>' . Profiler::getInstance('Tidyup my files')->mark('Datenbanksuche in ' . $strTable . ' und ' . count($stmt) . ' Datensätzen') . '</h4>';
 
 	ob_flush();
 	flush();
 }
-echo '</h3>';
+
 echo '<br /><br />';
 
 $output = [];
@@ -437,7 +503,7 @@ foreach ($arrFiles as $file)
 		$sourceFile = $file['src'];
 		$destFile   = 'to_delete/' . $file['src'];
 
-		$output['delete'][] = 'Datei <strong>' . $sourceFile . '</strong> wurde nicht in der Datenbank gefunden und wird zur Löschung verschoben nach <strong>' . $destFile . '</strong>.<br /><br />';
+		$output['delete'][] = 'Datei <strong>' . $sourceFile . '</strong> verschoben nach <strong>' . $destFile . '</strong>.<br />';
 	}
 
 	if ($file['rename'] === true)
@@ -456,7 +522,7 @@ foreach ($arrFiles as $file)
 			}
 		}
 
-		$output['rename'][] = ' in <strong>' . $destFile . '</strong> umbenannt.<br /><br /><br />';
+		$output['rename'][] = ' in <strong>' . $destFile . '</strong> umbenannt.<br />';
 	}
 
 	if (!empty($tableQueries))
@@ -466,7 +532,7 @@ foreach ($arrFiles as $file)
 			if (!empty($tableValues))
 			{
 				$output['table'][] = '<h4>Für die Tabelle \'' . $tableKey . '\' wurden folgende SQL-Queries ausgeführt:</h4>';
-				$output['table'][] = implode('<br /><br />', $tableValues) . '<br />';
+				$output['table'][] = implode('<br />', $tableValues) . '<br />';
 
 				unset($tableQueries[$tableKey]);
 
@@ -541,7 +607,8 @@ if ($delete === true)
 }
 
 echo '<br />';
-echo '<h4>' . Profiler::getInstance('Tidyup my files')->mark('Total') . '</h4>';
+//echo '<h4>' . Profiler::getInstance('Tidyup my files')->mark('Total') . '</h4>';
+echo '<h4>' . Profiler::getInstance('Tidyup my files')->setStart($startTime, $startMem)->mark('Total') . '</h4>';
 echo '<br /><br /><br />';
 
 if ($debug !== 'off')
