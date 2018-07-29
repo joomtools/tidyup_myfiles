@@ -184,6 +184,11 @@ $files      = JFolder::files($folder, $extensions, true, true);
 $arrFiles   = [];
 $exists     = [];
 
+if (!is_dir($folder))
+{
+	die('<h4>Der Ordnerpfad ' . $input->getPath('folder') . 'existiert nicht</h4>');
+}
+
 echo '<pre>';
 echo '<h2>Verwendete Parameter</h2>';
 
@@ -366,7 +371,7 @@ foreach ($arrTables as $strTable)
 	$db->setQuery($query);
 	$stmt = $db->loadAssocList();
 
-	echo 'Durchsuche <strong> ' . $strTable . '</strong> mit <strong>' . count($stmt) . '</strong> Datensätzen ...';
+	echo 'Durchsuche <strong> ' . $strTable . '</strong> mit <strong>' . count($stmt) . '</strong> Datensätzen ...<br />';
 
 	ob_flush();
 	flush();
@@ -483,13 +488,13 @@ foreach ($arrTables as $strTable)
 		}
 	}
 
-	echo '<h4>' . Profiler::getInstance('Tidyup my files')->mark('Datenbanksuche in ' . $strTable . ' und ' . count($stmt) . ' Datensätzen') . '</h4>';
+	echo '<strong>' . Profiler::getInstance('Tidyup my files')->mark('Datenbanksuche in ' . $strTable . ' und ' . count($stmt) . ' Datensätzen') . '</strong><br /><br />';
 
 	ob_flush();
 	flush();
 }
 
-echo '<br /><br />';
+echo '<br />';
 
 $output = [];
 
