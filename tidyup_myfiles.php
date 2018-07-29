@@ -118,7 +118,7 @@ $startMem  = memory_get_usage();
 
 @set_time_limit(0);
 @ini_set('max_execution_time', 0);
-@error_reporting(E_ERROR | E_WARNING | E_PARSE);
+@error_reporting(E_ERROR | E_WARNING | E_PARSE & ~E_NOTICE);
 @ini_set('display_errors', 1);
 @ini_set('track_errors', 1);
 
@@ -184,24 +184,32 @@ if ($rename === false)
 		$output[] = '<br /><strong>delete=1</strong> (alle Dateien, die nicht in der Datenbank verwendet werden, werden in den Ordner \'to_delete\' verschoben, um gelöscht zu werden)';
 		$output[] = '<br /><br /><strong>Optional:</strong>';
 		$output[] = '<br /><strong>all=1</strong> (alle Dateien URL-Safe umbenennen die nicht als gelöscht verschoben werden - rename muss gesetzt sein)';
-		$output[] = '<br /><strong>ext=pdf,png,doc</strong> (Dateiendungen nach denen gesucht werden soll - [default: pdf,png,jpg,jpeg])';
 		$output[] = '<br /><strong>folder=images/banner</strong> (Ordner im Joomla Rootverzeichnis, indem rekursiv nach Dateien gesucht werden soll - [default: images])';
+		$output[] = '<br /><strong>ext=pdf,png,doc</strong> (Dateiendungen nach denen gesucht werden soll - [default: pdf,png,jpg,jpeg])';
+		$output[] = '<br /><strong>exclude=tmp.png,thumb,thumbnails</strong> (Datei- oder Ordnernamen die von der Verarbeitung ausgeschlossen werden sollen)';
+		$output[] = '<br /><span style="color: orange;"><strong>excludeRegex=tmp,thumb,thumbnails</strong> (Bestimmte Schlagworte in Datei- oder Ordnernamen die von der Verarbeitung ausgeschlossen werden sollen)</span>';
 		$output[] = '<br /><span style="color: red;"><strong>debug=off</strong> (Wird dieser Parameter gesetzt, wird der Testmodus abgestellt und die Änderungen durchgeführt)</span>';
 		$output[] = '<br /><h4>' . Profiler::getInstance('Tidyup my files')->mark('Total') . '</h4>';
 		die('<div style="font-size: 125%;">' . implode('', $output) . '</div>');
 	}
 }
 
-$extLower   = explode(',', strtolower($input->getString('ext', 'pdf,png,jpg,jpeg')));
-$extUpper   = explode(',', strtoupper($input->getString('ext', 'pdf,png,jpg,jpeg')));
-$ext        = array_merge($extLower, $extUpper);
-$debug      = strtolower($input->getString('debug', ''));
-$extensions = '\.' . implode('|\.', $ext);
-$folder     = str_replace('\\', '/', $input->getPath('folder', 'images'));
-$folder     = JPATH_ROOT . '/' . trim($folder, '\\/');
-$files      = JFolder::files($folder, $extensions, true, true);
-$arrFiles   = [];
-$exists     = [];
+$excludefilterBase  = array('^\..*');
+$excludefilterParam = explode(',', $input->getCmd('excludeRegex', ''));
+$excludefilter      = array_filter(array_merge($excludefilterBase, $excludefilterParam));
+$excludeBase        = array('.svn', '.git', '.gitignore', 'CVS', '.DS_Store', '__MACOSX');
+$excludeParam       = explode(',', $input->getString('exclude', ''));
+$exclude            = array_filter(array_merge($excludeBase, $excludeParam));
+$extLower           = explode(',', strtolower($input->getString('ext', 'pdf,png,jpg,jpeg')));
+$extUpper           = explode(',', strtoupper($input->getString('ext', 'pdf,png,jpg,jpeg')));
+$ext                = array_merge($extLower, $extUpper);
+$debug              = strtolower($input->getString('debug', ''));
+$extensions         = '\.' . implode('|\.', $ext);
+$folder             = str_replace('\\', '/', $input->getPath('folder', 'images'));
+$folder             = JPATH_ROOT . '/' . trim($folder, '\\/');
+$files              = JFolder::files($folder, $extensions, true, true, $exclude, $excludefilter);
+$arrFiles           = [];
+$exists             = [];
 
 if (!is_dir($folder))
 {
@@ -233,14 +241,24 @@ if ($delete === true)
 	echo '- delete=1<br />';
 }
 
+if (!empty($input->getString('folder')))
+{
+	echo '- folder=' . $input->getPath('folder') . '<br />';
+}
+
 if (!empty($input->getString('ext')))
 {
 	echo '- ext=' . $input->getString('ext') . '<br />';
 }
 
-if (!empty($input->getString('folder')))
+if (!empty($input->getString('exclude')))
 {
-	echo '- folder=' . $input->getPath('folder') . '<br />';
+	echo '- exclude=' . $input->getString('exclude') . '<br />';
+}
+
+if (!empty($input->getCmd('excludeRegex')))
+{
+	echo '- exclude=' . $input->getCmd('excludeRegex') . '<br />';
 }
 
 echo '<br /><br />';
@@ -339,7 +357,7 @@ if (empty($arrFiles))
 	die('Keine Dateien zum Verarbeiten gefunden.');
 }
 
-
+// die;
 unset($files, $file);
 
 echo '<br />';
@@ -429,13 +447,13 @@ foreach ($arrTables as $strTable)
 
 			foreach ($arrFiles as $fileKey => $fileParams)
 			{
-				$w = false;
-				$fileSrc = $fileParams['src'];
+				$w        = false;
+				$fileSrc  = $fileParams['src'];
 				$fileDest = $fileParams['dest'];
 
 				if (in_array(str_replace($db->getPrefix(), '_', $strTable), _ONLY_FILENAMES))
 				{
-					$fileSrc = basename($fileParams['src']);
+					$fileSrc  = basename($fileParams['src']);
 					$fileDest = basename($fileParams['dest']);
 				}
 
@@ -466,11 +484,11 @@ foreach ($arrTables as $strTable)
 
 				if ($w !== false)
 				{
-					$v                        = $w;
+					$v                                = $w;
 					$arrFiles[$fileKey]['tabellen'][] = $strTable;
 					$arrFiles[$fileKey]['tabellen']   = ArrayHelper::arrayUnique($arrFiles[$fileKey]['tabellen']);
 					$arrFiles[$fileKey]['rename']     = true;
-					$dbFound                  = true;
+					$dbFound                          = true;
 				}
 
 				if ($w === false && $all === true)
