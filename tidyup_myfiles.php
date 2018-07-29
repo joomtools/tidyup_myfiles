@@ -273,6 +273,7 @@ flush();
 $db           = Factory::getDbo();
 $arrTables    = $db->getTableList();
 $tableQueries = [];
+$sql          = [];
 
 foreach ($arrTables as $strTable)
 {
@@ -347,30 +348,31 @@ foreach ($arrTables as $strTable)
 
 				if (is_array($v) && array_strpos($v, $fileParams['src']) !== false)
 				{
-					$w = array_str_replace($fileParams['src'], $fileParams['dest'], $v);
+					$fileParams['delete'] = false;
+
+					if ($rename === true && $fileParams['src'] != $fileParams['dest'])
+					{
+						$w = array_str_replace($fileParams['src'], $fileParams['dest'], $v);
+					}
 				}
 
 				if (!is_array($v) && strpos($v, $fileParams['src']) !== false)
 				{
-					$w = str_replace($fileParams['src'], $fileParams['dest'], $v);
+					$fileParams['delete'] = false;
+
+					if ($rename === true && $fileParams['src'] != $fileParams['dest'])
+					{
+						$w = str_replace($fileParams['src'], $fileParams['dest'], $v);
+					}
 				}
 
 				if ($w !== false)
 				{
-					$v = $w;
-
-					if ($delete === true)
-					{
-						$fileParams['delete'] = false;
-					}
-
-					if ($rename === true && $fileParams['src'] != $fileParams['dest'])
-					{
-						$fileParams['tabellen'][] = $strTable;
-						$fileParams['tabellen']   = ArrayHelper::arrayUnique($fileParams['tabellen']);
-						$fileParams['rename']     = true;
-						$dbFound                  = true;
-					}
+					$v                        = $w;
+					$fileParams['tabellen'][] = $strTable;
+					$fileParams['tabellen']   = ArrayHelper::arrayUnique($fileParams['tabellen']);
+					$fileParams['rename']     = true;
+					$dbFound                  = true;
 				}
 
 				if ($w === false && $all === true)
@@ -401,7 +403,7 @@ foreach ($arrTables as $strTable)
 				$w = json_encode($w);
 			}
 
-			if ($rename === true && $dbFound === true)
+			if ($rename === true)
 			{
 				$tableQuery = $db->getQuery(true);
 
@@ -409,7 +411,8 @@ foreach ($arrTables as $strTable)
 					->set($db->qn($k) . '=' . $db->q($w))
 					->where($db->qn($k) . '=' . $db->q($v));
 
-				$tableQueries[$strTable][] = $tableQuery;
+				$tableQueries[$strTable][] = htmlspecialchars((string) $tableQuery);
+				$sql[]                     = (string) $tableQuery;
 			}
 		}
 	}
@@ -426,17 +429,15 @@ $output = [];
 
 foreach ($arrFiles as $file)
 {
-	$delPath    = '';
 	$sourceFile = $file['src'];
 	$destFile   = $file['dest'];
 
 	if ($file['delete'] === true)
 	{
-		$delPath    = 'to_delete/';
 		$sourceFile = $file['src'];
-		$destFile   = $file['src'];
+		$destFile   = 'to_delete/' . $file['src'];
 
-		$output['delete'][] = 'Datei <strong>' . $sourceFile . '</strong> wurde nicht in der Datenbank gefunden und wird zur Löschung verschoben nach <strong>' . $delPath . $destFile . '</strong>.<br /><br />';
+		$output['delete'][] = 'Datei <strong>' . $sourceFile . '</strong> wurde nicht in der Datenbank gefunden und wird zur Löschung verschoben nach <strong>' . $destFile . '</strong>.<br /><br />';
 	}
 
 	if ($file['rename'] === true)
@@ -455,7 +456,7 @@ foreach ($arrFiles as $file)
 			}
 		}
 
-		$output['rename'][] = ' in <strong>' . $delPath . $destFile . '</strong> umbenannt.<br /><br /><br />';
+		$output['rename'][] = ' in <strong>' . $destFile . '</strong> umbenannt.<br /><br /><br />';
 	}
 
 	if (!empty($tableQueries))
@@ -465,21 +466,9 @@ foreach ($arrFiles as $file)
 			if (!empty($tableValues))
 			{
 				$output['table'][] = '<h4>Für die Tabelle \'' . $tableKey . '\' wurden folgende SQL-Queries ausgeführt:</h4>';
+				$output['table'][] = implode('<br /><br />', $tableValues) . '<br />';
 
-				foreach ($tableValues as $key => $query)
-				{
-					if ($debug === 'off')
-					{
-						if (!$db->setQuery($query)->execute())
-						{
-							die('fehler beim schreiben des Querys ' . htmlspecialchars((string) $query));
-						}
-					}
-
-					$output['table'][] = htmlspecialchars((string) $query) . '<br />';
-
-					unset($tableQueries[$tableKey][$key]);
-				}
+				unset($tableQueries[$tableKey]);
 
 				$output['table'][] = '<br /><br /><br />';
 			}
@@ -489,15 +478,21 @@ foreach ($arrFiles as $file)
 	if ($debug === 'off' && ($file['rename'] === true || $file['delete'] === true))
 	{
 		// If the destination directory doesn't exist we need to create it
-		if (!file_exists(dirname(JPATH_ROOT . '/' . $delPath . $destFile)))
+		if (!file_exists(dirname(JPATH_ROOT . '/' . $destFile)) && $file['delete'] === true)
 		{
 			$folderObject = new JFilesystemWrapperFolder;
 
-			$folderObject->create(dirname(JPATH_ROOT . '/' . $delPath . $destFile));
+			$folderObject->create(dirname(JPATH_ROOT . '/' . $destFile));
 		}
 
-		JFile::move(JPATH_ROOT . '/' . $sourceFile, JPATH_ROOT . '/' . $delPath . $destFile);
+		JFile::move(JPATH_ROOT . '/' . $sourceFile, JPATH_ROOT . '/' . $destFile);
 	}
+}
+
+if ($debug === 'off')
+{
+	$query = implode(';', $sql);
+	$db->setQuery($query)->execute();
 }
 
 if ($rename === true)
