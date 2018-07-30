@@ -7,10 +7,9 @@
  * @author      Guido De Gobbis <support@joomtools.de>
  * @copyright   Copyright since 2018 by JoomTools. All rights reserved.
  * @license     GNU General Public License version 3 or later; see LICENSE
- *
- * @version     1.0.7
  */
 
+const _VERSION        = '1.0.8';
 const _JEXEC          = 1;
 const _ONLY_FILENAMES = array(
 	'_rsgallery2_files',
@@ -217,7 +216,7 @@ if (!is_dir($folder))
 }
 
 echo '<pre>';
-echo '<h2>Verwendete Parameter</h2>';
+echo '<h2>Verwendete Parameter (Version ' . _VERSION . ')</h2>';
 
 if ($rename === true)
 {
