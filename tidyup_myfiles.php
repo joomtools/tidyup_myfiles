@@ -484,11 +484,11 @@ foreach ($arrTables as $strTable)
 
 				if ($w !== false)
 				{
-					$v                                = $w;
-					$arrFiles[$fileKey]['tabellen'][] = $strTable;
-					$arrFiles[$fileKey]['tabellen']   = ArrayHelper::arrayUnique($arrFiles[$fileKey]['tabellen']);
-					$arrFiles[$fileKey]['rename']     = true;
-					$dbFound                          = true;
+					$v                                         = $w;
+					$arrFiles[$fileKey]['tabellen'][$strTable][] = $k;
+					$arrFiles[$fileKey]['tabellen'][$strTable] = ArrayHelper::arrayUnique($arrFiles[$fileKey]['tabellen'][$strTable]);
+					$arrFiles[$fileKey]['rename']              = true;
+					$dbFound                                   = true;
 				}
 
 				if ($w === false && $all === true)
@@ -533,7 +533,7 @@ foreach ($arrTables as $strTable)
 		}
 	}
 
-	echo '<strong>' . Profiler::getInstance('Tidyup my files')->mark('Datenbanksuche in ' . $strTable . ' und ' . count($stmt) . ' Datensätzen') . '</strong><br /><br />';
+	echo '<br /><strong>' . Profiler::getInstance('Tidyup my files')->mark('Datenbanksuche in ' . $strTable . ' und ' . count($stmt) . ' Datensätzen') . '</strong><br /><br />';
 
 	ob_flush();
 	flush();
@@ -568,7 +568,14 @@ foreach ($arrFiles as $file)
 		{
 			if (!empty($file['tabellen']))
 			{
-				$output['rename'][] = ' in den Tabellen <strong>' . implode(', ', $file['tabellen']) . '</strong> gefunden und';
+				$output['rename'][] = ' in den Tabellen<strong>';
+
+				foreach ($file['tabellen'] as $tblName => $tblColumns)
+				{
+					$output['rename'][] = ' ' . $tblName . ' (' . implode(', ', $tblColumns) . ')';
+				}
+
+				$output['rename'][] = '</strong> gefunden und';
 			}
 		}
 
