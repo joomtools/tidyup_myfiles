@@ -8,7 +8,7 @@
  * @copyright   Copyright since 2018 by JoomTools. All rights reserved.
  * @license     GNU General Public License version 3 or later; see LICENSE
  *
- * @version     1.0.5
+ * @version     1.0.7
  */
 
 const _JEXEC          = 1;
