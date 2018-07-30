@@ -9,7 +9,7 @@
  * @license     GNU General Public License version 3 or later; see LICENSE
  */
 
-const _VERSION        = '1.0.8';
+const _VERSION        = '1.0.9';
 const _JEXEC          = 1;
 const _ONLY_FILENAMES = array(
 	'_rsgallery2_files',
@@ -152,7 +152,7 @@ use Joomla\Utilities\ArrayHelper;
 
 Profiler::getInstance('Tidyup my files')->setStart($startTime, $startMem);
 
-echo '<h1>Tidyup my files</h1>';
+echo '<h1>Tidyup my files (Version ' . _VERSION . ')</h1>';
 
 $input = new Input;
 
@@ -216,7 +216,7 @@ if (!is_dir($folder))
 }
 
 echo '<pre>';
-echo '<h2>Verwendete Parameter (Version ' . _VERSION . ')</h2>';
+echo '<h2>Verwendete Parameter</h2>';
 
 if ($rename === true)
 {
@@ -299,7 +299,7 @@ foreach ($files as $file)
 		}
 	}
 
-	if (file_exists(JPATH_ROOT . '/' . $dest) && $source != $dest)
+	if (file_exists_cs(JPATH_ROOT . '/' . $dest) || !empty($arrFiles[$dest]))
 	{
 		$exists[] = array(
 			'src'  => $source,
@@ -338,7 +338,7 @@ if (!empty($exists))
 	foreach ($exists as $exist)
 	{
 		$output['exist'][] = 'Die Datei <strong>' . $exist['src'] . '</strong> wird nicht verarbeitet.';
-		$output['exist'][] = ' Die Zieldatei <strong>' . $exist['dest'] . '</strong> ist bereits vorhanden, bitte prüfen.<br />';
+		$output['exist'][] = ' Die Zieldatei <strong>' . $exist['dest'] . '</strong> ist bereits vorhanden, oder wird durch eine vorherige Datei schon vorher erzeugt. Bitte prüfen.<br />';
 	}
 
 	$output['exist'][] = 'Davon ' . (int) count($exists) . ' Datei(en) nicht verarbeitet.<br /><br />';
@@ -483,11 +483,11 @@ foreach ($arrTables as $strTable)
 
 				if ($w !== false)
 				{
-					$v                                         = $w;
+					$v                                           = $w;
 					$arrFiles[$fileKey]['tabellen'][$strTable][] = $k;
-					$arrFiles[$fileKey]['tabellen'][$strTable] = ArrayHelper::arrayUnique($arrFiles[$fileKey]['tabellen'][$strTable]);
-					$arrFiles[$fileKey]['rename']              = true;
-					$dbFound                                   = true;
+					$arrFiles[$fileKey]['tabellen'][$strTable]   = ArrayHelper::arrayUnique($arrFiles[$fileKey]['tabellen'][$strTable]);
+					$arrFiles[$fileKey]['rename']                = true;
+					$dbFound                                     = true;
 				}
 
 				if ($w === false && $all === true)
@@ -706,4 +706,19 @@ function array_str_replace($strSearch, $strReplace, $arrData)
 	}
 
 	return $arrData;
+}
+
+function file_exists_cs($file)
+{
+	if (!file_exists($file))
+	{
+		return false;
+	}
+
+	if (strcmp(basename(realpath($file)), basename($file)) == 0)
+	{
+		return true;
+	}
+
+	return false;
 }
