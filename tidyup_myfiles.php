@@ -436,7 +436,7 @@ foreach ($arrTables as $strTable)
 			{
 				$tmp = @unserialize($v);
 
-				if ($tmp !== null)
+				if ($tmp !== false)
 				{
 					$blnSerialized = true;
 					$v             = $tmp;
