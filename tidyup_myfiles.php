@@ -9,7 +9,7 @@
  * @license     GNU General Public License version 3 or later; see LICENSE
  */
 
-const _VERSION        = '1.0.9';
+const _VERSION        = '1.0.10';
 const _JEXEC          = 1;
 const _ONLY_FILENAMES = array(
 	'_rsgallery2_files',
@@ -299,8 +299,19 @@ foreach ($files as $file)
 		}
 	}
 
-	if (file_exists_cs(JPATH_ROOT . '/' . $dest) || !empty($arrFiles[$dest]))
+	$arrFiles[$dest] = array(
+		'src'      => $source,
+		'dest'     => $dest,
+		'delete'   => $delete,
+		'rename'   => false,
+		'exists'   => false,
+		'tabellen' => [],
+	);
+
+	if (file_exists_cs(JPATH_ROOT . '/' . $dest) && $rename === true)
 	{
+		$arrFiles[$dest]['exists'] = true;
+
 		$exists[] = array(
 			'src'  => $source,
 			'dest' => $dest,
@@ -310,14 +321,6 @@ foreach ($files as $file)
 
 		continue;
 	}
-
-	$arrFiles[$dest] = array(
-		'src'      => $source,
-		'dest'     => $dest,
-		'delete'   => $delete,
-		'rename'   => false,
-		'tabellen' => [],
-	);
 
 	echo $urlsafe . $source . '<br />';
 
@@ -446,6 +449,11 @@ foreach ($arrTables as $strTable)
 
 			foreach ($arrFiles as $fileKey => $fileParams)
 			{
+				if ($fileParams['exists'] === true)
+				{
+					continue;
+				}
+
 				$w        = false;
 				$fileSrc  = $fileParams['src'];
 				$fileDest = $fileParams['dest'];
@@ -460,24 +468,13 @@ foreach ($arrTables as $strTable)
 				{
 					$v = get_object_vars($v);
 				}
-
-				if (is_array($v) && array_strpos($v, $fileSrc) !== false)
+				if (findFileInData($fileSrc, $v) === true)
 				{
 					$arrFiles[$fileKey]['delete'] = false;
 
 					if ($rename === true && $fileSrc != $fileDest)
 					{
-						$w = array_str_replace($fileSrc, $fileDest, $v);
-					}
-				}
-
-				if (!is_array($v) && strpos($v, $fileSrc) !== false)
-				{
-					$arrFiles[$fileKey]['delete'] = false;
-
-					if ($rename === true && $fileSrc != $fileDest)
-					{
-						$w = str_replace($fileSrc, $fileDest, $v);
+						$w = replaceInData($v, $fileSrc, $fileDest);
 					}
 				}
 
@@ -674,18 +671,29 @@ echo '<br /><br /><br />';
 
 echo '</pre>';
 
-function array_strpos($arrHaystack, $strNeedle)
+function findFileInData($fileSrc, $data)
 {
-	foreach ($arrHaystack as $v)
+	if (is_array($data))
 	{
-		if (is_object($v))
+		foreach ($data as $v)
 		{
-			$v = get_object_vars($v);
+			if (is_object($v))
+			{
+				$v = get_object_vars($v);
+			}
+
+			if (is_array($v) && findFileInData($fileSrc, $v)
+				|| !is_array($v) && strpos($v, $fileSrc) !== false)
+			{
+				return true;
+			}
 		}
-		if (is_array($v) && array_strpos($v, $strNeedle) || !is_array($v) && strpos($v, $strNeedle) !== false)
-		{
-			return true;
-		}
+		return false;
+	}
+
+	if (strpos($data, $fileSrc) !== false)
+	{
+		return true;
 	}
 
 	return false;
@@ -721,4 +729,26 @@ function file_exists_cs($file)
 	}
 
 	return false;
+}
+
+/**
+ * @param   mixed   $v
+ * @param   string  $fileSrc
+ * @param   string  $fileDest
+ *
+ * @return   mixed
+ * @since    1.0.10
+ */
+function replaceInData($v, $fileSrc, $fileDest)
+{
+	if (is_array($v))
+	{
+		$w = array_str_replace($fileSrc, $fileDest, $v);
+	}
+	else
+	{
+		$w = str_replace($fileSrc, $fileDest, $v);
+	}
+
+	return $w;
 }
