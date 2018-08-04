@@ -2,116 +2,137 @@
 /**
  * Tidyup my files
  *
- * Hier die Beschreibung
+ * Dieses Script soll helfen Dateien URL-Safe umzubenennen und bei
+ * Verwendung in der Datenbank auch diese Einträge anzupassen.
+ * Genaueres zur Anwendung und über die Parameter zur Steuerung kann
+ * durch Aufrufen des Scripts über einen Internetbrowser erfahren werden.
  *
  * @author      Guido De Gobbis <support@joomtools.de>
  * @copyright   Copyright since 2018 by JoomTools. All rights reserved.
  * @license     GNU General Public License version 3 or later; see LICENSE
  */
 
-const _VERSION        = '1.0.9';
-const _JEXEC          = 1;
+/**
+ * Version
+ */
+const _VERSION = '1.0.10';
+
+/**
+ * Konstante für die Ausführung von Joomla
+ */
+const _JEXEC = 1;
+
+/**
+ * Tabellennamen ohne Prefix bei denen nur
+ * nach dem Dateinamen gesucht werden soll
+ */
 const _ONLY_FILENAMES = array(
-	'_rsgallery2_files',
-);
-const _EXCLUDE_TABLES = array(
-	'_advancedmodules',
-	'_ak_profiles',
-	'_ak_stats',
-	'_ak_storage',
-	'_akeeba_common',
-	'_assets',
-	'_associations',
-//	'_banner_clients',
-//	'_banner_tracks',
-//	'_banners',
-//	'_categories',
-//	'_contact_details',
-//	'_content',
-	'_content_frontpage',
-	'_content_rating',
-//	'_content_types',
-	'_contentitem_tag_map',
-	'_core_log_searches',
-//	'_extensions',
-	'_fields',
-//	'_fields_categories',
-//	'_fields_groups',
-//	'_fields_values',
-//	'_finder_filters',
-//	'_finder_links',
-	'_finder_links_terms0',
-	'_finder_links_terms1',
-	'_finder_links_terms2',
-	'_finder_links_terms3',
-	'_finder_links_terms4',
-	'_finder_links_terms5',
-	'_finder_links_terms6',
-	'_finder_links_terms7',
-	'_finder_links_terms8',
-	'_finder_links_terms9',
-	'_finder_links_termsa',
-	'_finder_links_termsb',
-	'_finder_links_termsc',
-	'_finder_links_termsd',
-	'_finder_links_termse',
-	'_finder_links_termsf',
-	'_finder_taxonomy',
-	'_finder_taxonomy_map',
-	'_finder_terms',
-	'_finder_terms_common',
-	'_finder_tokens',
-	'_finder_tokens_aggregate',
-	'_finder_types',
-	'_jevents_catmap',
-	'_jevents_exception',
-	'_jevents_filtermap',
-	'_jevents_repetition',
-	'_jevents_rrule',
-	'_jev_users',
-	'_languages',
-//	'_menu',
-	'_menu_types',
-//	'_messages',
-	'_messages_cfg',
-//	'_modules',
-	'_modules_menu',
-//	'_newsfeeds',
-//	'_overrider',
-	'_patchtester_pulls',
-	'_patchtester_tests',
-	'_phocamaps_icon',
-	'_phocamaps_map',
-//	'_postinstall_messages',
-//	'_redirect_links',
-	'_rsgallery2_config',
-	'_schemas',
-	'_session',
-//	'_tags',
-//	'_template_styles',
-	'_ucm_base',
-//	'_ucm_content',
-//	'_ucm_history',
-	'_update_sites',
-	'_update_sites_extensions',
-	'_updates',
-	'_user_keys',
-	'_user_notes',
-	'_user_profiles',
-	'_user_usergroup_map',
-	'_usergroups',
-	'_users',
-	'_utf8_conversion',
-	'_viewlevels',
-//	'_wf_profiles',
-	'_zoo_category_item',
-	'_zoo_rating',
-	'_zoo_search_index',
-	'_zoo_tag',
-	'_zoo_version',
-	'_zoo_zoofilter_searches',
+	'rsgallery2_files',
 );
 
+/**
+ * Tabellennamen ohne Prefix die von der
+ * Suche ausgeschlossen werden können
+ */
+const _EXCLUDE_TABLES = array(
+	'advancedmodules',
+	'ak_profiles',
+	'ak_stats',
+	'ak_storage',
+	'akeeba_common',
+	'assets',
+	'associations',
+//	'banner_clients',
+//	'banner_tracks',
+//	'banners',
+//	'categories',
+//	'contact_details',
+//	'content',
+	'content_frontpage',
+	'content_rating',
+//	'content_types',
+	'contentitem_tag_map',
+	'core_log_searches',
+//	'extensions',
+	'fields',
+//	'fields_categories',
+//	'fields_groups',
+//	'fields_values',
+//	'finder_filters',
+//	'finder_links',
+	'finder_links_terms0',
+	'finder_links_terms1',
+	'finder_links_terms2',
+	'finder_links_terms3',
+	'finder_links_terms4',
+	'finder_links_terms5',
+	'finder_links_terms6',
+	'finder_links_terms7',
+	'finder_links_terms8',
+	'finder_links_terms9',
+	'finder_links_termsa',
+	'finder_links_termsb',
+	'finder_links_termsc',
+	'finder_links_termsd',
+	'finder_links_termse',
+	'finder_links_termsf',
+	'finder_taxonomy',
+	'finder_taxonomy_map',
+	'finder_terms',
+	'finder_terms_common',
+	'finder_tokens',
+	'finder_tokens_aggregate',
+	'finder_types',
+	'jevents_catmap',
+	'jevents_exception',
+	'jevents_filtermap',
+	'jevents_repetition',
+	'jevents_rrule',
+	'jev_users',
+	'languages',
+//	'menu',
+	'menu_types',
+//	'messages',
+	'messages_cfg',
+//	'modules',
+	'modules_menu',
+//	'newsfeeds',
+//	'overrider',
+	'patchtester_pulls',
+	'patchtester_tests',
+	'phocamaps_icon',
+	'phocamaps_map',
+//	'postinstall_messages',
+//	'redirect_links',
+	'rsgallery2_config',
+	'schemas',
+	'session',
+//	'tags',
+//	'template_styles',
+	'ucm_base',
+//	'ucm_content',
+//	'ucm_history',
+	'update_sites',
+	'update_sites_extensions',
+	'updates',
+	'user_keys',
+	'user_notes',
+	'user_profiles',
+	'user_usergroup_map',
+	'usergroups',
+	'users',
+	'utf8_conversion',
+	'viewlevels',
+//	'wf_profiles',
+	'zoo_category_item',
+	'zoo_rating',
+	'zoo_search_index',
+	'zoo_tag',
+	'zoo_version',
+	'zoo_zoofilter_searches',
+);
+
+// Startzeit und Speichernutzung für Auswertung
 $startTime = microtime(1);
 $startMem  = memory_get_usage();
 
@@ -144,9 +165,11 @@ require_once JPATH_CONFIGURATION . '/configuration.php';
 
 // Load needed Namespaces
 use Joomla\CMS\Factory;
-use Joomla\CMS\Filter\OutputFilter;
 use Joomla\CMS\Language\Language;
+use Joomla\CMS\Language\Transliterate;
 use Joomla\CMS\Profiler\Profiler;
+use Joomla\Filesystem\File;
+use Joomla\Filesystem\Folder;
 use Joomla\Input\Input;
 use Joomla\Utilities\ArrayHelper;
 
@@ -165,16 +188,15 @@ $lang->load('files_joomla.sys', JPATH_SITE, null, false, false)
 // Fallback to the files_joomla file in the default language
 || $lang->load('files_joomla.sys', JPATH_SITE, null, true);
 
-\JLoader::import('joomla.filesystem.file');
-\JLoader::import('joomla.filesystem.folder');
-
 $all    = $input->getBool('all', false);
+$path   = $input->getBool('path', false);
 $rename = $input->getBool('rename', false);
 $delete = $input->getBool('delete', false);
 
 if ($rename === false)
 {
-	$all = false;
+	$all  = false;
+	$path = false;
 
 	if ($delete === false)
 	{
@@ -182,6 +204,7 @@ if ($rename === false)
 		$output[] = '<br /><strong>rename=1</strong> (alle Dateien URL-Safe umbenennen die in der Datenbank gefunden werden)';
 		$output[] = '<br /><strong>delete=1</strong> (alle Dateien, die nicht in der Datenbank verwendet werden, werden in den Ordner \'to_delete\' verschoben, um gelöscht zu werden)';
 		$output[] = '<br /><br /><strong>Optional:</strong>';
+		$output[] = '<br /><strong>path=1</strong> (alle Pfade URL-Safe umbenennen die nicht als gelöscht verschoben werden - rename muss gesetzt sein)';
 		$output[] = '<br /><strong>all=1</strong> (alle Dateien URL-Safe umbenennen die nicht als gelöscht verschoben werden - rename muss gesetzt sein)';
 		$output[] = '<br /><strong>folder=images/banner</strong> (Ordner im Joomla Rootverzeichnis, indem rekursiv nach Dateien gesucht werden soll - [default: images])';
 		$output[] = '<br /><strong>ext=pdf,png,doc</strong> (Dateiendungen nach denen gesucht werden soll - [default: pdf,png,jpg,jpeg])';
@@ -206,7 +229,7 @@ $debug              = strtolower($input->getString('debug', ''));
 $extensions         = '\.' . implode('|\.', $ext);
 $folder             = str_replace('\\', '/', $input->getPath('folder', 'images'));
 $folder             = JPATH_ROOT . '/' . trim($folder, '\\/');
-$files              = JFolder::files($folder, $extensions, true, true, $exclude, $excludefilter);
+$files              = Folder::files($folder, $extensions, true, true, $exclude, $excludefilter);
 $arrFiles           = [];
 $exists             = [];
 
@@ -232,6 +255,18 @@ if ($all === true)
 	else
 	{
 		echo '- all=1<br />';
+	}
+}
+
+if ($path === true)
+{
+	if ($delete === true)
+	{
+		echo '<span style="color:#999">- path=1</span><br />';
+	}
+	else
+	{
+		echo '- path=1<br />';
 	}
 }
 
@@ -269,57 +304,66 @@ echo '<h2>Gefundene Dateien mit der Endung: .' . implode(', .', $ext) . '</h2>';
 
 foreach ($files as $file)
 {
-	$oldname = basename($file);
-	$fileExt = JFile::getExt($oldname);
+	$fileParts = pathinfo($file);
 
-	if (!in_array($fileExt, $ext))
+	if (!empty($fileParts['extension']) && !in_array($fileParts['extension'], $ext) || empty($fileParts['filename']))
 	{
 		continue;
 	}
 
-	$urlsafe      = '<span style="color: red;">URL-Safe: </span>';
-	$newname      = OutputFilter::stringURLSafe(JFile::stripExt($oldname)) . '.' . strtolower($fileExt);
-	$source       = ltrim(str_replace(JPATH_ROOT, '', $file), '\\/');
-	$source       = str_replace('\\', '/', $source);
-	$relativePath = str_replace($oldname, '', $source);
-	$dest         = str_replace('\\', '/', $relativePath) . $newname;
+	$urlSafe          = '<span style="color: red;">URL-Safe: </span>';
+	$newName          = stringMakeSafe($fileParts['filename']) . '.' . strtolower($fileParts['extension']);
+	$source           = ltrim(str_replace(JPATH_ROOT, '', $file), '\\/');
+	$source           = str_replace('\\', '/', $source);
+	$relativePath     = str_replace($fileParts['basename'], '', $source);
+	$relativePathSafe = pathMakeSafe($relativePath);
+
+	$destination = str_replace('\\', '/', $relativePath) . $newName;
 
 	if ($delete === true)
 	{
-		if ($source == $dest)
+		if ($source == $destination)
 		{
-			$urlsafe = '<span style="color: darkgreen;">URL-Safe: </span>';
+			$urlSafe = '<span style="color: darkgreen;">URL-Safe: </span>';
 		}
 	}
 	else
 	{
-		if ($source == $dest)
+		if ($path === true)
+		{
+			$destination = str_replace('\\', '/', $relativePathSafe) . $newName;
+		}
+
+		if ($source == $destination)
 		{
 			continue;
 		}
 	}
 
-	if (file_exists_cs(JPATH_ROOT . '/' . $dest) || !empty($arrFiles[$dest]))
+	$arrFiles[$destination] = array(
+		'src'      => $source,
+		'dest'     => $destination,
+		'delete'   => $delete,
+		'rename'   => false,
+		'exists'   => false,
+		'tabellen' => [],
+	);
+
+	if (file_exists_cs(JPATH_ROOT . '/' . $destination) && $rename === true)
 	{
+		$arrFiles[$destination]['exists'] = true;
+
 		$exists[] = array(
 			'src'  => $source,
-			'dest' => $dest,
+			'dest' => $destination,
 		);
 
-		echo $urlsafe . '<span style="color: red;">' . $source . '</span><br />';
+		echo $urlSafe . '<span style="color: red;">' . $source . '</span><br />';
 
 		continue;
 	}
 
-	$arrFiles[$dest] = array(
-		'src'      => $source,
-		'dest'     => $dest,
-		'delete'   => $delete,
-		'rename'   => false,
-		'tabellen' => [],
-	);
-
-	echo $urlsafe . $source . '<br />';
+	echo $urlSafe . $source . ' -> ' . $destination . '<br />';
 
 	ob_flush();
 	flush();
@@ -356,13 +400,14 @@ if (empty($arrFiles))
 	die('Keine Dateien zum Verarbeiten gefunden.');
 }
 
-// die;
 unset($files, $file);
 
 echo '<br />';
 //echo '<h4>' . Profiler::getInstance('Tidyup my files')->mark('Total') . '</h4>';
 echo '<h4>' . Profiler::getInstance('Tidyup my files')->mark('Dateisuche in ' . $folder) . '</h4>';
 echo '<br /><br /><br />';
+
+//die;
 
 echo '<h2>Starte Suche nach Datein in der Datenbank ....</h2>';
 
@@ -379,7 +424,9 @@ $sql          = [];
 
 foreach ($arrTables as $strTable)
 {
-	if (in_array(str_replace($db->getPrefix(), '_', $strTable), _EXCLUDE_TABLES))
+	$strTableOhnePrefix = str_replace($db->getPrefix(), '', $strTable);
+
+	if (in_array($strTableOhnePrefix, _EXCLUDE_TABLES))
 	{
 		continue;
 	}
@@ -446,11 +493,16 @@ foreach ($arrTables as $strTable)
 
 			foreach ($arrFiles as $fileKey => $fileParams)
 			{
+				if ($fileParams['exists'] === true)
+				{
+					continue;
+				}
+
 				$w        = false;
 				$fileSrc  = $fileParams['src'];
 				$fileDest = $fileParams['dest'];
 
-				if (in_array(str_replace($db->getPrefix(), '_', $strTable), _ONLY_FILENAMES))
+				if (in_array($strTableOhnePrefix, _ONLY_FILENAMES))
 				{
 					$fileSrc  = basename($fileParams['src']);
 					$fileDest = basename($fileParams['dest']);
@@ -460,24 +512,13 @@ foreach ($arrTables as $strTable)
 				{
 					$v = get_object_vars($v);
 				}
-
-				if (is_array($v) && array_strpos($v, $fileSrc) !== false)
+				if (findFileInData($fileSrc, $v) === true)
 				{
 					$arrFiles[$fileKey]['delete'] = false;
 
 					if ($rename === true && $fileSrc != $fileDest)
 					{
-						$w = array_str_replace($fileSrc, $fileDest, $v);
-					}
-				}
-
-				if (!is_array($v) && strpos($v, $fileSrc) !== false)
-				{
-					$arrFiles[$fileKey]['delete'] = false;
-
-					if ($rename === true && $fileSrc != $fileDest)
-					{
-						$w = str_replace($fileSrc, $fileDest, $v);
+						$w = replaceInData($v, $fileSrc, $fileDest);
 					}
 				}
 
@@ -602,12 +643,10 @@ foreach ($arrFiles as $file)
 		// If the destination directory doesn't exist we need to create it
 		if (!file_exists(dirname(JPATH_ROOT . '/' . $destFile)) && $file['delete'] === true)
 		{
-			$folderObject = new JFilesystemWrapperFolder;
-
-			$folderObject->create(dirname(JPATH_ROOT . '/' . $destFile));
+			Folder::create(dirname(JPATH_ROOT . '/' . $destFile));
 		}
 
-		JFile::move(JPATH_ROOT . '/' . $sourceFile, JPATH_ROOT . '/' . $destFile);
+		File::move(JPATH_ROOT . '/' . $sourceFile, JPATH_ROOT . '/' . $destFile);
 	}
 }
 
@@ -691,6 +730,72 @@ function array_strpos($arrHaystack, $strNeedle)
 	return false;
 }
 
+/**
+ * @param   string $fileSrc
+ * @param   mixed  $data
+ *
+ * @return   bool
+ * @since    1.0.10
+ */
+function findFileInData($fileSrc, $data)
+{
+	if (is_array($data))
+	{
+		foreach ($data as $v)
+		{
+			if (is_object($v))
+			{
+				$v = get_object_vars($v);
+			}
+
+			if (is_array($v) && findFileInData($fileSrc, $v)
+				|| !is_array($v) && strpos($v, $fileSrc) !== false)
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	if (strpos($data, $fileSrc) !== false)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+/**
+ * @param   mixed  $v
+ * @param   string $fileSrc
+ * @param   string $fileDest
+ *
+ * @return   mixed
+ * @since    1.0.10
+ */
+function replaceInData($v, $fileSrc, $fileDest)
+{
+	if (is_array($v))
+	{
+		$w = array_str_replace($fileSrc, $fileDest, $v);
+	}
+	else
+	{
+		$w = str_replace($fileSrc, $fileDest, $v);
+	}
+
+	return $w;
+}
+
+/**
+ * @param   string $strSearch
+ * @param   string $strReplace
+ * @param   array  $arrData
+ *
+ * @return   array
+ * @since    1.0.10
+ */
 function array_str_replace($strSearch, $strReplace, $arrData)
 {
 	foreach ($arrData as $k => $v)
@@ -708,6 +813,12 @@ function array_str_replace($strSearch, $strReplace, $arrData)
 	return $arrData;
 }
 
+/**
+ * @param   string $file
+ *
+ * @return   bool
+ * @since    1.0.10
+ */
 function file_exists_cs($file)
 {
 	if (!file_exists($file))
@@ -721,4 +832,33 @@ function file_exists_cs($file)
 	}
 
 	return false;
+}
+
+/**
+ * @param   string $string
+ *
+ * @return   string
+ * @since    1.0.10
+ */
+function stringMakeSafe($string)
+{
+	$string = str_replace(' ', '_', $string);
+	$string = Transliterate::utf8_latin_to_ascii($string);
+
+	return File::makeSafe($string);
+}
+
+/**
+ * @param   string $path
+ *
+ * @return   string
+ * @since    1.0.10
+ */
+function pathMakeSafe($path)
+{
+	$path  = str_replace(' ', '_', $path);
+	$path  = Transliterate::utf8_latin_to_ascii($path);
+	$regex = array('#[^A-Za-z0-9_\\\/\(\)\[\]\{\}\#\$\^\+\.\'~`!@&=;,-]#');
+
+	return preg_replace($regex, '', $path);
 }
