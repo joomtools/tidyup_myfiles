@@ -356,7 +356,7 @@ foreach ($files as $file)
 
 			if ($delete === true)
 			{
-				$toIgnore             = true;
+				$toIgnore = true;
 			}
 
 			if ($delete === false)
@@ -370,18 +370,12 @@ foreach ($files as $file)
 	{
 		$output['toIgnore'][] = '<span style="color: darkgreen;">' . $source . '</span>';
 
-		if ($delete === true)
+		if ($delete === false)
 		{
-			$toIgnore = true;
+			continue;
 		}
 
-		if ($all === true)
-		{
-			if ($delete === false)
-			{
-				continue;
-			}
-		}
+		$toIgnore = true;
 	}
 
 	$arrFiles[$destination] = $arrFile;
@@ -410,7 +404,7 @@ if ($x > 0)
 	echo '<br /><br />';
 }
 
-if(!empty($output['toExclude']) && $delete === true)
+if (!empty($output['toExclude']) && $delete === true)
 {
 	$output['toIgnore'] = array_merge($output['toIgnore'], $output['toExclude']);
 	unset($output['toExclude']);
@@ -472,7 +466,7 @@ if ($countArrFiles > 0 && $countSearch === 0)
 	echo ' gesucht</h3>';
 	echo '<br /><br />';
 }
-else if($countArrFiles === 0 && $countSearch === 0)
+else if ($countArrFiles === 0 && $countSearch === 0)
 {
 	die('<h3>Keine Dateien zum Verarbeiten übrig.</h3>');
 }
@@ -632,9 +626,10 @@ foreach ($arrTables as $strTable)
 					$dbChanged                    = true;
 				}
 
-				if ($fileParams['exists'] === false && $valChanged === false && $all === true)
+				if ($fileParams['exists'] === false && $valChanged === false
+					&& ($all === true && $delete === true))
 				{
-					if ($arrFiles[$fileKey]['delete'] === false)
+					if ($arrFiles[$fileKey]['delete'] === false && $fileSrc != $fileDest)
 					{
 						$arrFiles[$fileKey]['rename'] = true;
 					}
@@ -692,7 +687,7 @@ foreach ($arrFiles as $file)
 	if ($file['delete'] === true)
 	{
 //		$sourceFile = $file['src'];
-		$destFile   = 'to_delete/' . $file['src'];
+		$destFile = 'to_delete/' . $file['src'];
 
 		$output['delete'][] = 'Datei <strong>' . $sourceFile . '</strong> verschoben nach <strong>' . $destFile . '</strong>.<br />';
 	}
@@ -832,8 +827,8 @@ function array_strpos($arrHaystack, $strNeedle)
 }
 
 /**
- * @param   string  $fileSrc
- * @param   mixed   $data
+ * @param   string $fileSrc
+ * @param   mixed  $data
  *
  * @return   bool
  * @since    1.0.10
@@ -868,9 +863,9 @@ function findFileInData($fileSrc, $data)
 }
 
 /**
- * @param   mixed   $v
- * @param   string  $fileSrc
- * @param   string  $fileDest
+ * @param   mixed  $v
+ * @param   string $fileSrc
+ * @param   string $fileDest
  *
  * @return   mixed
  * @since    1.0.10
@@ -890,9 +885,9 @@ function replaceInData($v, $fileSrc, $fileDest)
 }
 
 /**
- * @param   string  $strSearch
- * @param   string  $strReplace
- * @param   array   $arrData
+ * @param   string $strSearch
+ * @param   string $strReplace
+ * @param   array  $arrData
  *
  * @return   array
  * @since    1.0.10
@@ -915,7 +910,7 @@ function array_str_replace($strSearch, $strReplace, $arrData)
 }
 
 /**
- * @param   string  $file
+ * @param   string $file
  *
  * @return   bool
  * @since    1.0.10
