@@ -33,6 +33,11 @@ _Die Parameter `delete=1` und `rename=1` können unabhängig von einander oder g
   `rename=1` muss verwendet werden.<br>
   _Wird ignoriert, wenn `delete=1` eingesetzt wird._
 
+  * `seo=1` Alle Dateien URL-Konform **und** SEO-Konform umbenennen - **\[default: 0\]**<br>
+ `rename=1` muss verwendet werden.<br>
+  _Statt Unterstriche `_` und `CameCase` zu erlauben, wird alles kleingeschrieben und `_` in `-` umgewandelt.<br>
+  Wandelt auch die Pfade um, wenn `path=1` verwendet wird._
+
   * `folder=images/banner` Ordner im Joomla Rootverzeichnis, indem nach Dateien gesucht werden soll - **\[default: images\]**
 
   * `subfolder=1` Alle Unterordner rekursiv nach Dateien durchsuchen - **\[default: 0\]**

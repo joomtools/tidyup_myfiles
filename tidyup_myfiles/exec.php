@@ -23,7 +23,7 @@
 /**
  * Version
  */
-const _VERSION = '1.0.11';
+const _VERSION = '1.0.12-rc1';
 
 /**
  * Konstante für die Ausführung von Joomla
@@ -217,6 +217,7 @@ $lang->load('files_joomla.sys', JPATH_SITE, null, false, false)
 || $lang->load('files_joomla.sys', JPATH_SITE, null, true);
 
 $all       = $input->getBool('all', false);
+$seo       = $input->getBool('seo', false);
 $path      = $input->getBool('path', false);
 $subfolder = $input->getBool('subfolder', false);
 $rename    = $input->getBool('rename', false);
@@ -258,6 +259,12 @@ if ($rename === false)
 			<p><code>all=1</code> Alle Dateien URL-Konform umbenennen - <strong>[default: 0]</strong><br>
 				<code>rename=1</code> muss verwendet werden.<br>
 				<em>Wird ignoriert, wenn <code>delete=1</code> eingesetzt wird.</em></p>
+		</li>
+		<li>
+			<p><code>seo=1</code> Alle Dateien URL-Konform <strong>und</strong> SEO-Konform umbenennen - <strong>[default: 0]</strong><br>
+				<code>rename=1</code> muss verwendet werden.<br>
+				<em>Statt Unterstriche <code>_</code> und <code>CameCase</code> zu erlauben, wird alles kleingeschrieben und <code>_</code> in <code>-</code> umgewandelt.<br>
+					Wandelt auch die Pfade um, wenn <code>path=1</code> verwendet wird.</em></p>
 		</li>
 		<li>
 			<p><code>folder=images/banner</code> Ordner im Joomla Rootverzeichnis, indem nach Dateien gesucht werden soll - <strong>[default: images]</strong></p>
@@ -349,6 +356,12 @@ if ($path === true)
 	}
 }
 
+if ($seo === true)
+{
+	echo '- seo=1<br />';
+
+}
+
 if ($delete === true)
 {
 	echo '- delete=1<br />';
@@ -410,13 +423,13 @@ foreach ($files as $file)
 		continue;
 	}
 
-	$newName = stringMakeSafe($fileParts['filename']) . '.' . strtolower($fileParts['extension']);
+	$newName = stringMakeSafe($fileParts['filename']) . '.' . strtolower($fileParts['extension'], $seo);
 
 	$source = ltrim(str_replace(JPATH_ROOT, '', $file), '\\/');
 	$source = str_replace('\\', '/', $source);
 
 	$relativePath     = str_replace($fileParts['basename'], '', $source);
-	$relativePathSafe = pathMakeSafe($relativePath);
+	$relativePathSafe = pathMakeSafe($relativePath, $seo);
 
 	$destination = str_replace('\\', '/', $relativePath) . $newName;
 
@@ -1042,12 +1055,18 @@ function file_exists_cs($file)
 
 /**
  * @param   string $string
+ * @param   bool   $seo
  *
  * @return   string
  * @since    1.0.10
  */
-function stringMakeSafe($string)
+function stringMakeSafe($string, $seo = false)
 {
+	if ($seo === true)
+	{
+		return Joomla\CMS\Filter\OutputFilter::stringURLSafe($string);
+	}
+
 	$string = str_replace(' ', '_', $string);
 	$string = Transliterate::utf8_latin_to_ascii($string);
 
@@ -1056,15 +1075,37 @@ function stringMakeSafe($string)
 
 /**
  * @param   string $path
+ * @param   bool   $seo
  *
  * @return   string
  * @since    1.0.10
  */
-function pathMakeSafe($path)
+function pathMakeSafe($path, $seo = false)
 {
+	if ($seo === true)
+	{
+		return pathMakeSeoSafe($path);
+	}
 	$path  = str_replace(' ', '_', $path);
 	$path  = Transliterate::utf8_latin_to_ascii($path);
 	$regex = array('#[^A-Za-z0-9_\\\/\(\)\[\]\{\}\#\$\^\+\.\'~`!@&=;,-]#');
 
 	return preg_replace($regex, '', $path);
+}
+
+/**
+ * @param   string $path
+ *
+ * @return   string
+ * @since    1.0.12
+ */
+function pathMakeSeoSafe($path)
+{
+	$path = str_replace('-', ' ', $path);
+	$path  = Transliterate::utf8_latin_to_ascii($path);
+	$path = trim(strtolower($path));
+	$path = preg_replace('/(\s|[^A-Za-z0-9\-])+/', '-', $path);
+	$path = trim($path, '-');
+
+	return $path;
 }
