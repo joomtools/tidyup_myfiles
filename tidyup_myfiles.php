@@ -18,7 +18,7 @@
 /**
  * Version
  */
-const _VERSION = '1.0.11-rc1';
+const _VERSION = '1.0.11-rc2';
 
 /**
  * Konstante für die Ausführung von Joomla
@@ -307,7 +307,16 @@ if (!empty($input->getCmd('excludeRegex')))
 
 echo '<br /><br />';
 
-echo '<h2>Suche Dateien mit der Endung: .' . implode(', .', $ext) . '<h2> ';
+if ($subfolder === true)
+{
+	$recursiv = ' (inkl. Unterverzeichnisse)';
+}
+else
+{
+	$recursiv = ' (ohne Unterverzeichnisse)';
+}
+
+echo '<h2>Suche Dateien mit der Endung: .' . implode(', .', $ext) . '<br />in ' . $folder . $recursiv . '<h2> ';
 
 $arrFiles = [];
 $x        = 0;
