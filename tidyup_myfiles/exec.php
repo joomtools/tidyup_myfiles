@@ -2,13 +2,18 @@
 /**
  * Tidyup my files
  *
- * Dieses Script soll helfen Dateien URL-Safe umzubenennen und bei
- * Verwendung in der Datenbank auch diese Einträge anzupassen.
- * Genaueres zur Anwendung und über die Parameter zur Steuerung kann
- * durch Aufrufen des Scripts über einen Internetbrowser erfahren werden.
- * Ein dickes Danke geht an die Tester, die viel Geduld und Nerven gezeigt haben.
+ * Dieses Projekt ist entstanden, um z.B. Joomla-Administratoren einer Redaktionsseite,
+ * die keinen Zugriff via SSH auf die Konsole des Host haben und auch sonst nicht genug
+ * Erfahrung im Umgang mit Datenbanksystemen haben, die Arbeit zu erleichtern.
  *
- * @thanks      Elisa Foltyn, Christiane Maier-Stadtherr, Thomas Finnern
+ * Es soll sie dabei unterstützen eine Massenumbenennung von Dateien und Verzeichnissen,
+ * samt Anpassung der Datenbank, in ein URL-Konformes Format vorzunehmen.
+ * Es berücksichtigt auch Werte, die in der Datenbank mit `json_encode()` und `serialize()`
+ * gespeichert wurden.
+ *
+ * @thanks      Ein besonderer Danke geht an die Tester
+ *              Elisa Foltyn, Christiane Maier-Stadtherr und Thomas Finner,
+ *              die viel Geduld und Nerven gezeigt haben.
  *
  * @author      Guido De Gobbis
  * @copyright   Copyright since 2018 by JoomTools. All rights reserved.
@@ -18,7 +23,7 @@
 /**
  * Version
  */
-const _VERSION = '1.0.11-rc2';
+const _VERSION = '1.0.11';
 
 /**
  * Konstante für die Ausführung von Joomla
