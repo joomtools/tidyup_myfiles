@@ -182,9 +182,29 @@ use Joomla\Input\Input;
 use Joomla\Utilities\ArrayHelper;
 
 Profiler::getInstance('Tidyup my files')->setStart($startTime, $startMem);
-
-echo '<h1>Tidyup my files (Version ' . _VERSION . ')</h1>';
-
+?>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+	<meta charset="UTF-8">
+	<title>Tidyup my files (Version <?php echo _VERSION; ?>)</title>
+	<style>
+		body {font-size: 120%; line-height:1.3;}
+		pre {white-space: normal;}
+		code {
+			padding: 0.2em 0.4em;
+			margin: 0;
+			font-size: 85%;
+			background-color: rgba(27,31,35,0.1);
+			border-radius: 3px;
+		}
+		em {font-size: 95%;}
+	</style>
+</head>
+<body>
+<pre>
+<h1>Tidyup my files (Version <?php echo _VERSION; ?>)</h1>
+<?php
 $input = new Input;
 
 // Load Library language
@@ -209,21 +229,70 @@ if ($rename === false)
 	$path = false;
 
 	if ($delete === false)
-	{
-		$output[] = '<strong>Einer der folgenden Pflicht-Parameter muss im URL-Aufruf angegeben werden:</strong>';
-		$output[] = '<br /><strong>rename=1</strong> (alle Dateien URL-Safe umbenennen die in der Datenbank verwendet werden - [default: 0])';
-		$output[] = '<br /><strong>delete=1</strong> (alle Dateien, die nicht in der Datenbank verwendet werden, werden in den Ordner \'to_delete\' verschoben, um gelöscht zu werden - [default: 0])';
-		$output[] = '<br /><span style="color: red;"><strong>ACHTUNG:</strong> Bei der Verwendung von \'delete=1\' wird dringend empfohlen die Suchergebnisse einzugrenzen, da jede gefundene Datei in jedem Datensatz der Datenbank gesucht wird!<br />Bei zu vielen Dateien kann es sonst zum frühzeitigen Abbruch durch serverseitige Begrenzungen kommen.</span>';
-		$output[] = '<br /><br /><strong>Optional:</strong>';
-		$output[] = '<br /><strong>path=1</strong> (alle Pfade URL-Safe umschreiben, die nicht als gelöscht gekennzeichnet werden - rename muss gesetzt sein. Ist dieser Wert nicht gesetzt, wird nur nach den Dateinamen in der Datenbank gesucht und umbenannt - [default: 0])';
-		$output[] = '<br /><strong>all=1</strong> (alle Dateien URL-Safe umbenennen die nicht als gelöscht gekennzeichnet werden - rename muss gesetzt sein - [default: 0])';
-		$output[] = '<br /><strong>subfolder=1</strong> (alle Unterordner rekursiv nach Dateien durchsuchen - [default: 0])';
-		$output[] = '<br /><strong>folder=images/banner</strong> (Ordner im Joomla Rootverzeichnis, indem nach Dateien gesucht werden soll - [default: images])';
-		$output[] = '<br /><strong>ext=pdf,png,doc</strong> (Dateiendungen nach denen gesucht werden soll - [default: pdf,png,jpg,jpeg])';
-		$output[] = '<br /><strong>exclude=tmp.png,thumb,thumbnails</strong> (Datei- oder Ordnernamen die von der Suche ausgeschlossen werden sollen)';
-		$output[] = '<br /><span style="color: orange;"><strong>excludeRegex=tmp,thumb,thumbnails</strong> (Bestimmte Schlagworte in Datei- oder Ordnernamen die von der Suche ausgeschlossen werden sollen)</span>';
-		$output[] = '<br /><span style="color: red;"><strong>debug=off</strong> (Wird dieser Parameter gesetzt, wird der Testmodus abgestellt und die Änderungen durchgeführt)</span>';
-		die('<div style="font-size: 125%;">' . implode('', $output) . '</div>');
+		{ ?>
+	<p>Dieses Projekt ist entstanden, um z.B. Joomla-Administratoren einer Redaktionsseite, die keinen Zugriff auf die Konsole des Host haben und auch sonst nicht genug Erfahrung mit Datenbanksystemen haben, die Arbeit zu erleichtern.</p>
+	<p>Es soll sie dabei unterstützen eine Massenumbenennung von Dateien und Verzeichnissen, samt Anpassung der Datenbank, in ein URL-Konformes Format vorzunehmen. Es berücksichtigt auch Werte, die in der Datenbank mit <code>json_encode()</code> und <code>serialize()</code> gespeichert wurden.</p>
+	<p>Zur Verwendung das Verzeichnis <code>tidyup_myfiles</code> in das Joomla Rootverzeichnis kopieren.</p>
+	<h3>Aufruf</h3>
+	<p><code>https://example.org/tidyup_myfiles/exec.php?rename=1[&amp;all=1][&amp;ext=jpg,jpeg][&amp;folder=images/UNTERORDNER][&amp;debug=off]</code></p>
+	<h3>Pflichtparameter:</h3>
+	<ul>
+		<li>
+			<p><code>rename=1</code> Alle Dateien URL-Safe umbenennen die in der Datenbank verwendet werden - <strong>[default: 0]</strong></p>
+		</li>
+		<li>
+			<p><code>delete=1</code> Alle Dateien, die nicht in der Datenbank verwendet werden, werden in den Ordner <code>to_delete</code> verschoben, um gelöscht zu werden - <strong>[default: 0]</strong></p>
+		</li>
+	</ul>
+	<p style="color: red;"><em><strong>ACHTUNG:</strong> <br>
+		Bei der Verwendung von <code>delete=1</code> wird dringend empfohlen die Suchergebnisse einzugrenzen, da jede gefundene Datei in jedem Datensatz der Datenbank gesucht wird! Bei zu vielen Dateien kann es sonst zum frühzeitigen Abbruch durch serverseitige Begrenzungen kommen.</em></p>
+	<p><em>Die Parameter <code>delete=1</code> und <code>rename=1</code> können unabhängig von einander oder gemeinsam verwendet werden, aber einer der beiden muss angegeben sein.</em></p>
+	<h3>Zusatzparameter</h3>
+	<ul>
+		<li>
+			<p><code>path=1</code> Alle Pfade URL-Safe umbenennen, die nicht als gelöscht gekennzeichnet werden - <strong>[default: 0]</strong><br>
+				<code>rename=1</code> muss verwendet werden.<br>
+				<em>Ist dieser Wert nicht gesetzt, wird nur nach den Dateinamen in der Datenbank gesucht und umbenannt.</em></p>
+		</li>
+		<li>
+			<p><code>all=1</code> Alle Dateien URL-Konform umbenennen - <strong>[default: 0]</strong><br>
+				<code>rename=1</code> muss verwendet werden.<br>
+				<em>Wird ignoriert, wenn <code>delete=1</code> eingesetzt wird.</em></p>
+		</li>
+		<li>
+			<p><code>folder=images/banner</code> Ordner im Joomla Rootverzeichnis, indem nach Dateien gesucht werden soll - <strong>[default: images]</strong></p>
+		</li>
+		<li>
+			<p><code>subfolder=1</code> Alle Unterordner rekursiv nach Dateien durchsuchen - <strong>[default: 0]</strong></p>
+		</li>
+		<li>
+			<p><code>ext=pdf,png,doc</code> Dateiendungen nach denen gesucht werden soll (Werte durch Komma <code>,</code> getrennt) - **[default: pdf,png,jpg,jpeg]<br>
+				<em>Jede angegebene Endung wird automatisch auch in Großbuchstaben gesucht.</em></p>
+		</li>
+		<li>
+			<p><code>exclude=tmp.png,thumb,thumbnails</code> Datei- oder Ordnernamen die von der Suche ausgeschlossen werden sollen (Werte durch Komma <code>,</code> getrennt)</p>
+		</li>
+		<li>
+			<p style="color: orange;"><code>excludeRegex=tmp,thumb,thumbnails</code> Bestimmte Schlagworte in Datei- oder Ordnernamen die von der Suche ausgeschlossen werden sollen (Werte durch Komma <code>,</code> getrennt)</p>
+		</li>
+		<li>
+			<p style="color: red;"><code>debug=off</code> Wird dieser Parameter gesetzt, wird der Testmodus abgestellt und die Änderungen durchgeführt<br>
+				<em>Solange der Parameter debug=off nicht verwendet wird, ist es nur eine Simulation, es kann also nichts passieren.</em></p>
+		</li>
+	</ul>
+	<h3>Beispiele:</h3>
+	<ul>
+		<li>
+			<p><code>https://example.org/tidyup_myfiles/exec.php</code><br>
+				Gibt diese Hilfe aus</p>
+		</li>
+		<li>
+			<p><code>https://example.org/tidyup_myfiles/exec.php?rename=1&amp;folder=images/UNTERORDNER</code><br>
+				Durchsucht das Verzeichnis <code>images/UNTERORDENR</code> nach Dateien mit der Endung <code>.pdf, .png, .jpg, .jpeg, .PDF, .PNG, .JPG, .JPEG</code> und Prüft sie auf URL-Konformität. Die Endungen werden kelingeschrieben und Leerzeichen durch <code>_</code> ersetzt, sowie Umlaute umgeschrieben. Es wird in der Datenbank nach Vorkommen der zu ändernden Dateien gesucht und ggf. Umbenannt.</p>
+		</li>
+	</ul>
+	<p>Ein besonderer Danke geht an die Tester <em>Elisa Foltyn</em>, <em>Christiane Maier-Stadtherr</em> und <em>Thomas Finner</em>, die viel Geduld und Nerven gezeigt haben.</p>
+	<?php die;
 	}
 }
 
@@ -248,7 +317,6 @@ if (!is_dir($folder))
 
 $files = Folder::files($folder, $extensions, $subfolder, true, $exclude, $excludefilter);
 
-echo '<pre>';
 echo '<h2>Verwendete Parameter</h2>';
 
 if ($rename === true)
@@ -260,6 +328,7 @@ if ($all === true)
 {
 	if ($delete === true)
 	{
+		$all = false;
 		echo '<span style="color:#999">- all=1</span><br />';
 	}
 	else
@@ -413,7 +482,7 @@ foreach ($files as $file)
 	}
 }
 
-echo '<br /><br />';
+echo '<br />';
 
 if ($x === 0)
 {
@@ -423,7 +492,7 @@ if ($x === 0)
 if ($x > 0)
 {
 	echo '<h3>Es wurde/n insgesamt ' . $x . ' Datei/en gefunden.</h3>';
-	echo '<br /><br />';
+	echo '<br />';
 }
 
 if (!empty($output['toExclude']) && $delete === true)
@@ -486,7 +555,6 @@ if ($countArrFiles > 0 && $countSearch === 0)
 	}
 
 	echo ' gesucht</h3>';
-	echo '<br /><br />';
 }
 else if ($countArrFiles === 0 && $countSearch === 0)
 {
@@ -515,7 +583,6 @@ if ($countSearch > 0)
 
 	echo 'gesucht</h3>';
 	echo implode('<br />', $output['toSearch']);
-	echo '<br /><br />';
 }
 
 echo '<h4>' . Profiler::getInstance('Tidyup my files')->mark('Dateisuche in ' . $relativeFolder) . '</h4>';
@@ -731,7 +798,7 @@ foreach ($arrFiles as $file)
 
 	if ($file['delete'] === true)
 	{
-		$destFile = 'to_delete/' . $file['src'];
+		$destFile = 'tidyup_myfiles/to_delete/' . $file['src'];
 
 		$output['delete'][] = 'Datei <strong>' . $sourceFile . '</strong> verschoben nach <strong>' . $destFile . '</strong>.<br />';
 	}
@@ -778,7 +845,7 @@ foreach ($arrFiles as $file)
 	if ($debug === 'off' && ($file['rename'] === true || $file['delete'] === true))
 	{
 		// If the destination directory doesn't exist we need to create it
-		if (!file_exists(dirname(JPATH_ROOT . '/' . $destFile)))
+		if (!file_exists_cs(dirname(JPATH_ROOT . '/' . $destFile)))
 		{
 			Folder::create(dirname(JPATH_ROOT . '/' . $destFile));
 		}
@@ -787,7 +854,7 @@ foreach ($arrFiles as $file)
 	}
 }
 
-if ($debug === 'off')
+if ($debug === 'off' && !empty($sql))
 {
 	$query = implode(';', $sql);
 	$db->setQuery($query)->execute();
@@ -843,12 +910,14 @@ if ($debug !== 'off')
 	echo '<h1>Debug Modus aktiv, nix passiert :-)</h1>';
 	echo '<br /><br /><br />';
 }
+?>
 
-echo '<br />';
-echo '<h4>' . Profiler::getInstance('Tidyup my files')->mark('Ende der Verarbeitung') . '</h4>';
-echo '<br /><br /><br />';
-
-echo '</pre>';
+<br />
+<h4><?php echo Profiler::getInstance('Tidyup my files')->mark('Ende der Verarbeitung'); ?></h4>
+<br /><br /><br />
+</pre>
+</body>
+<?php
 
 function array_strpos($arrHaystack, $strNeedle)
 {
