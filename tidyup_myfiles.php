@@ -6,8 +6,11 @@
  * Verwendung in der Datenbank auch diese Einträge anzupassen.
  * Genaueres zur Anwendung und über die Parameter zur Steuerung kann
  * durch Aufrufen des Scripts über einen Internetbrowser erfahren werden.
+ * Ein dickes Danke geht an die Tester, die viel Geduld und Nerven gezeigt haben.
  *
- * @author      Guido De Gobbis <support@joomtools.de>
+ * @thanks      Elisa Foltyn, Christiane Maier-Stadtherr, Thomas Finnern
+ *
+ * @author      Guido De Gobbis
  * @copyright   Copyright since 2018 by JoomTools. All rights reserved.
  * @license     GNU General Public License version 3 or later; see LICENSE
  */
@@ -15,7 +18,7 @@
 /**
  * Version
  */
-const _VERSION = '1.0.11-dev';
+const _VERSION = '1.0.11-rc1';
 
 /**
  * Konstante für die Ausführung von Joomla
@@ -205,6 +208,7 @@ if ($rename === false)
 		$output[] = '<strong>Einer der folgenden Pflicht-Parameter muss im URL-Aufruf angegeben werden:</strong>';
 		$output[] = '<br /><strong>rename=1</strong> (alle Dateien URL-Safe umbenennen die in der Datenbank verwendet werden - [default: 0])';
 		$output[] = '<br /><strong>delete=1</strong> (alle Dateien, die nicht in der Datenbank verwendet werden, werden in den Ordner \'to_delete\' verschoben, um gelöscht zu werden - [default: 0])';
+		$output[] = '<br /><span style="color: red;"><strong>ACHTUNG:</strong> Bei der Verwendung von \'delete=1\' wird dringend empfohlen die Suchergebnisse einzugrenzen, da jede gefundene Datei in jedem Datensatz der Datenbank gesucht wird!<br />Bei zu vielen Dateien kann es sonst zum frühzeitigen Abbruch durch serverseitige Begrenzungen kommen.</span>';
 		$output[] = '<br /><br /><strong>Optional:</strong>';
 		$output[] = '<br /><strong>path=1</strong> (alle Pfade URL-Safe umschreiben, die nicht als gelöscht gekennzeichnet werden - rename muss gesetzt sein. Ist dieser Wert nicht gesetzt, wird nur nach den Dateinamen in der Datenbank gesucht und umbenannt - [default: 0])';
 		$output[] = '<br /><strong>all=1</strong> (alle Dateien URL-Safe umbenennen die nicht als gelöscht gekennzeichnet werden - rename muss gesetzt sein - [default: 0])';
@@ -214,7 +218,6 @@ if ($rename === false)
 		$output[] = '<br /><strong>exclude=tmp.png,thumb,thumbnails</strong> (Datei- oder Ordnernamen die von der Suche ausgeschlossen werden sollen)';
 		$output[] = '<br /><span style="color: orange;"><strong>excludeRegex=tmp,thumb,thumbnails</strong> (Bestimmte Schlagworte in Datei- oder Ordnernamen die von der Suche ausgeschlossen werden sollen)</span>';
 		$output[] = '<br /><span style="color: red;"><strong>debug=off</strong> (Wird dieser Parameter gesetzt, wird der Testmodus abgestellt und die Änderungen durchgeführt)</span>';
-		$output[] = '<br /><h4>' . Profiler::getInstance('Tidyup my files')->mark('Total') . '</h4>';
 		die('<div style="font-size: 125%;">' . implode('', $output) . '</div>');
 	}
 }
@@ -282,6 +285,11 @@ if (!empty($input->getString('folder')))
 	echo '- folder=' . $input->getPath('folder') . '<br />';
 }
 
+if (!empty($input->getBool('subfolder')))
+{
+	echo '- subfolder=' . $input->getBool('subfolder') . '<br />';
+}
+
 if (!empty($input->getString('ext')))
 {
 	echo '- ext=' . $input->getString('ext') . '<br />';
@@ -299,7 +307,7 @@ if (!empty($input->getCmd('excludeRegex')))
 
 echo '<br /><br />';
 
-echo '<h2>Suche Dateien mit der Endung: .' . implode(', .', $ext);
+echo '<h2>Suche Dateien mit der Endung: .' . implode(', .', $ext) . '<h2> ';
 
 $arrFiles = [];
 $x        = 0;
@@ -385,13 +393,13 @@ foreach ($files as $file)
 		$output['toSearch'][] = $source . ' -> <span style="color: darkgreen;">' . $destination . '</span>';
 	}
 
-	if ($x % 3 === 0)
+	if ($x % 60 === 0)
 	{
-		echo ' .';
+		echo '.';
 	}
 }
 
-echo '</h2>';
+echo '<br /><br />';
 
 if ($x === 0)
 {
@@ -521,6 +529,8 @@ $sql        = [];
 
 foreach ($arrTables as $strTable)
 {
+	$hits                = [];
+	$search              = 0;
 	$strTblWithoutPrefix = str_replace($db->getPrefix(), '', $strTable);
 
 	if (in_array($strTblWithoutPrefix, _EXCLUDE_TABLES))
@@ -553,13 +563,21 @@ foreach ($arrTables as $strTable)
 	$db->setQuery($query);
 	$tblRows = $db->loadAssocList();
 
-	echo 'Durchsuche <strong>' . $strTable . '</strong> mit <strong>' . count($tblRows) . '</strong> Datensätzen ...<br />';
+	echo 'Durchsuche <strong>' . $strTable . '</strong> mit <strong>' . count($tblRows) . '</strong> Datensätzen ...';
 
 	ob_flush();
 	flush();
 
 	foreach ($tblRows as $tblRow)
 	{
+		if (++$search %80 === 0)
+		{
+			echo '.';
+
+			ob_flush();
+			flush();
+		}
+
 		foreach ($tblRow as $column => $value)
 		{
 			if (!in_array($column, $arrAllowedColumns) || empty($value))
@@ -609,6 +627,9 @@ foreach ($arrTables as $strTable)
 
 				if (findFileInData($fileSrc, $value) === true)
 				{
+					$hits[] = $fileSrc;
+					$hits = ArrayHelper::arrayUnique($hits);
+
 					$arrFiles[$fileKey]['delete']                = false;
 					$arrFiles[$fileKey]['tabellen'][$strTable][] = $column;
 					$arrFiles[$fileKey]['tabellen'][$strTable]   = ArrayHelper::arrayUnique($arrFiles[$fileKey]['tabellen'][$strTable]);
@@ -642,16 +663,15 @@ foreach ($arrTables as $strTable)
 			}
 
 			$valChanged = $value;
+			$value      = $tblRow[$column];
 
 			if ($valSerialized)
 			{
-				$value      = $tblRow[$column];
 				$valChanged = serialize($valChanged);
 			}
 
 			if ($valJson)
 			{
-				$value      = $tblRow[$column];
 				$valChanged = json_encode($valChanged);
 			}
 
@@ -669,7 +689,10 @@ foreach ($arrTables as $strTable)
 		}
 	}
 
-	echo '<br /><strong>' . Profiler::getInstance('Tidyup my files')->mark('Datenbanksuche in ' . $strTable . ' und ' . count($tblRows) . ' Datensätzen') . '</strong><br /><br />';
+	$countHits  = (int) count($hits);
+	$hitsOutput = $countHits > 0 ? '<br />(' . implode(', ', $hits) . ')' : '';
+
+	echo '<br /><strong>' . Profiler::getInstance('Tidyup my files')->mark('Datenbanksuche in ' . $strTable . ' und ' . count($tblRows) . ' Datensätzen') . '</strong> ergab <strong>' . $countHits . ' Treffer</strong>' . $hitsOutput . '<br /><br />';
 
 	ob_flush();
 	flush();
@@ -678,15 +701,22 @@ foreach ($arrTables as $strTable)
 echo '<br />';
 
 $output = [];
-
+$x      = 0;
 foreach ($arrFiles as $file)
 {
+	if (++$x % 60 === 0)
+	{
+		echo '.';
+
+		ob_flush();
+		flush();
+	}
+
 	$sourceFile = $file['src'];
 	$destFile   = $file['dest'];
 
 	if ($file['delete'] === true)
 	{
-//		$sourceFile = $file['src'];
 		$destFile = 'to_delete/' . $file['src'];
 
 		$output['delete'][] = 'Datei <strong>' . $sourceFile . '</strong> verschoben nach <strong>' . $destFile . '</strong>.<br />';
@@ -702,17 +732,14 @@ foreach ($arrFiles as $file)
 		}
 		else
 		{
-			if (!empty($file['tabellen']))
+			$output['rename'][] = ' in den Tabellen<strong>';
+
+			foreach ($file['tabellen'] as $tblName => $tblColumns)
 			{
-				$output['rename'][] = ' in den Tabellen<strong>';
-
-				foreach ($file['tabellen'] as $tblName => $tblColumns)
-				{
-					$output['rename'][] = ' ' . $tblName . ' (' . implode(', ', $tblColumns) . ')';
-				}
-
-				$output['rename'][] = '</strong> gefunden und';
+				$output['rename'][] = ' ' . $tblName . ' (' . implode(', ', $tblColumns) . ')';
 			}
+
+			$output['rename'][] = '</strong> gefunden und';
 		}
 
 		$output['rename'][] = ' in <strong>' . $destFile . '</strong> umbenannt.<br />';
