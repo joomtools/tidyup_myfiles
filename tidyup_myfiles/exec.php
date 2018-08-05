@@ -23,7 +23,7 @@
 /**
  * Version
  */
-const _VERSION = '1.0.12-rc1';
+const _VERSION = '1.0.12-rc2';
 
 /**
  * Konstante für die Ausführung von Joomla
@@ -1104,7 +1104,7 @@ function pathMakeSeoSafe($path)
 	$path = str_replace('-', ' ', $path);
 	$path  = Transliterate::utf8_latin_to_ascii($path);
 	$path = trim(strtolower($path));
-	$path = preg_replace('/(\s|[^A-Za-z0-9\-])+/', '-', $path);
+	$path = preg_replace('/(\s|[^\/A-Za-z0-9\-])+/', '-', $path);
 	$path = trim($path, '-');
 
 	return $path;

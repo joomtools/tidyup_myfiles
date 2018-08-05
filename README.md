@@ -42,7 +42,7 @@ _Die Parameter `delete=1` und `rename=1` können unabhängig von einander oder g
 
   * `subfolder=1` Alle Unterordner rekursiv nach Dateien durchsuchen - **\[default: 0\]**
 
-  * `ext=pdf,png,doc` Dateiendungen nach denen gesucht werden soll (Werte durch Komma `,` getrennt) - **\[default: pdf,png,jpg,jpeg\]<br>
+  * `ext=pdf,png,doc` Dateiendungen nach denen gesucht werden soll (Werte durch Komma `,` getrennt) - **\[default: pdf,png,jpg,jpeg\]**<br>
   _Jede angegebene Endung wird automatisch auch in Großbuchstaben gesucht._
 
   * `exclude=tmp.png,thumb,thumbnails` Datei- oder Ordnernamen die von der Suche ausgeschlossen werden sollen (Werte durch Komma `,` getrennt)
@@ -60,7 +60,7 @@ _Die Parameter `delete=1` und `rename=1` können unabhängig von einander oder g
   Gibt diese Hilfe aus
 
 * `https://example.org/tidyup_myfiles/exec.php?rename=1&folder=images/UNTERORDNER`<br>
-  Durchsucht das Verzeichnis `images/UNTERORDENR` nach Dateien mit der Endung `.pdf, .png, .jpg, .jpeg, .PDF, .PNG, .JPG, .JPEG` und Prüft sie auf URL-Konformität. Die Endungen werden kelingeschrieben und Leerzeichen durch `_` ersetzt, sowie Umlaute umgeschrieben. Es wird in der Datenbank nach Vorkommen der zu ändernden Dateien gesucht und ggf. Umbenannt. 
+  Durchsucht das Verzeichnis `images/UNTERORDENR` nach Dateien mit der Endung `.pdf, .png, .jpg, .jpeg, .PDF, .PNG, .JPG, .JPEG` und Prüft sie auf URL-Konformität. Die Endungen werden kleingeschrieben und Leerzeichen durch `_` ersetzt, sowie Umlaute umgeschrieben. Es wird in der Datenbank nach Vorkommen der zu ändernden Dateien gesucht und ggf. Umbenannt. 
 
 
-Ein besonderer Danke geht an die Tester _Elisa Foltyn_, _Christiane Maier-Stadtherr_ und [_Thomas Finnern_](https://github.com/ThomasFinnern), die viel Geduld und Nerven gezeigt haben. :+1:
+Ein besonderer Danke geht an die Tester _Elisa Foltyn_, [_Christiane Maier-Stadtherr_](https://www.chmst.de) und [_Thomas Finnern_](https://github.com/ThomasFinnern), die viel Geduld und Nerven gezeigt haben. :+1:
