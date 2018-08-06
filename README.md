@@ -1,8 +1,17 @@
 # Tidyup my files
+
+* Beseitige ungenutzten Datenmüll (zum Beispiel ungenutzte Bilder im Images Ordner)
+* Benenne alle Dateien webkonform bzw. SEO Konform um
+
 Dieses Projekt ist entstanden, um z.B. Joomla-Administratoren einer Redaktionsseite, die keinen Zugriff auf die Konsole des Host haben und auch sonst nicht genug Erfahrung mit Datenbanksystemen haben, die Arbeit zu erleichtern.
  
  Es soll sie dabei unterstützen eine Massenumbenennung von Dateien und Verzeichnissen, samt Anpassung der Datenbank, in ein URL-Konformes Format vorzunehmen. Es berücksichtigt auch Werte, die in der Datenbank mit `json_encode()` und `serialize()` gespeichert wurden.
-
+ 
+ ### Achtung
+ Dieses Skript berücksichtigt *KEINE* Dateien die dynamisch bezogen werden. 
+ Das könnten zum Beispiel sein: 
+ - Bildergalerien die aus einem Verzeichnis geladen werden. 
+ - "Hart codierte" Bildpfade die in Overrides oder Templatedateien o.ä verwendet werden.
 
 Zur Verwendung das Verzeichnis `tidyup_myfiles` in das Joomla Rootverzeichnis kopieren.
 
@@ -60,7 +69,7 @@ _Die Parameter `delete=1` und `rename=1` können unabhängig von einander oder g
   Gibt diese Hilfe aus
 
 * `https://example.org/tidyup_myfiles/exec.php?rename=1&folder=images/UNTERORDNER`<br>
-  Durchsucht das Verzeichnis `images/UNTERORDENR` nach Dateien mit der Endung `.pdf, .png, .jpg, .jpeg, .PDF, .PNG, .JPG, .JPEG` und Prüft sie auf URL-Konformität. Die Endungen werden kleingeschrieben und Leerzeichen durch `_` ersetzt, sowie Umlaute umgeschrieben. Es wird in der Datenbank nach Vorkommen der zu ändernden Dateien gesucht und ggf. Umbenannt. 
+  Durchsucht das Verzeichnis `images/UNTERORDNER` nach Dateien mit der Endung `.pdf, .png, .jpg, .jpeg, .PDF, .PNG, .JPG, .JPEG` und Prüft sie auf URL-Konformität. Die Endungen werden kleingeschrieben und Leerzeichen durch `_` ersetzt, sowie Umlaute umgeschrieben. Es wird in der Datenbank nach Vorkommen der zu ändernden Dateien gesucht und ggf. Umbenannt. 
 
 
 Ein besonderer Danke geht an die Tester _Elisa Foltyn_, [_Christiane Maier-Stadtherr_](https://www.chmst.de) und [_Thomas Finnern_](https://github.com/ThomasFinnern), die viel Geduld und Nerven gezeigt haben. :+1:
