@@ -72,4 +72,4 @@ _Die Parameter `delete=1` und `rename=1` können unabhängig von einander oder g
   Durchsucht das Verzeichnis `images/UNTERORDNER` nach Dateien mit der Endung `.pdf, .png, .jpg, .jpeg, .PDF, .PNG, .JPG, .JPEG` und Prüft sie auf URL-Konformität. Die Endungen werden kleingeschrieben und Leerzeichen durch `_` ersetzt, sowie Umlaute umgeschrieben. Es wird in der Datenbank nach Vorkommen der zu ändernden Dateien gesucht und ggf. Umbenannt. 
 
 
-Ein besonderer Danke geht an die Tester _Elisa Foltyn_, [_Christiane Maier-Stadtherr_](https://www.chmst.de) und [_Thomas Finnern_](https://github.com/ThomasFinnern), die viel Geduld und Nerven gezeigt haben. :+1:
+Ein besonderer Dank geht an die Tester _Elisa Foltyn_, [_Christiane Maier-Stadtherr_](https://www.chmst.de) und [_Thomas Finnern_](https://github.com/ThomasFinnern), die viel Geduld und Zeit investiert haben. :+1:
