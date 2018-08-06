@@ -23,7 +23,7 @@
 /**
  * Version
  */
-const _VERSION = '1.0.12-rc2';
+const _VERSION = '1.0.12-rc3';
 
 /**
  * Konstante für die Ausführung von Joomla
@@ -305,16 +305,25 @@ if ($rename === false)
 
 $excludefilterBase  = array('^\..*');
 $excludefilterParam = explode(',', $input->getCmd('excludeRegex', ''));
-$excludefilter      = array_filter(array_merge($excludefilterBase, $excludefilterParam));
+$excludefilter      = array_filter(
+	array_map('trim', array_merge($excludefilterBase, $excludefilterParam))
+);
 $excludeBase        = array('.svn', '.git', '.gitignore', 'CVS', '.DS_Store', '__MACOSX');
 $excludeParam       = explode(',', $input->getString('exclude', ''));
-$exclude            = array_filter(array_merge($excludeBase, $excludeParam));
+$exclude            = array_filter(
+	array_map('trim', array_merge($excludeBase, $excludeParam))
+);
 $extLower           = explode(',', strtolower($input->getString('ext', 'pdf,png,jpg,jpeg')));
 $extUpper           = explode(',', strtoupper($input->getString('ext', 'pdf,png,jpg,jpeg')));
-$ext                = array_merge($extLower, $extUpper);
+$ext                = array_filter(
+	array_map('trim', array_merge($extLower, $extUpper))
+);
 $debug              = strtolower($input->getString('debug', ''));
 $extensions         = '\.' . implode('|\.', $ext);
-$relativeFolder     = trim(str_replace('\\', '/', $input->getPath('folder', 'images')), '\\/');
+$relativeFolder     = trim(
+	str_replace('\\', '/', $input->getPath('folder', 'images')),
+	'\\/'
+);
 $folder             = JPATH_ROOT . '/' . $relativeFolder;
 
 if (!is_dir($folder))
