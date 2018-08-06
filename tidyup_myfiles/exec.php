@@ -11,9 +11,9 @@
  * Es berücksichtigt auch Werte, die in der Datenbank mit `json_encode()` und `serialize()`
  * gespeichert wurden.
  *
- * @thanks      Ein besonderer Danke geht an die Tester
+ * @thanks      Ein besonderer Dank geht an die Tester
  *              Elisa Foltyn, Christiane Maier-Stadtherr und Thomas Finner,
- *              die viel Geduld und Nerven gezeigt haben.
+ *              die viel Geduld und Zeit investiert haben.
  *
  * @author      Guido De Gobbis
  * @copyright   Copyright since 2018 by JoomTools. All rights reserved.
@@ -23,7 +23,7 @@
 /**
  * Version
  */
-const _VERSION = '1.0.12-rc3';
+const _VERSION = '1.0.12';
 
 /**
  * Konstante für die Ausführung von Joomla
@@ -231,8 +231,19 @@ if ($rename === false)
 
 	if ($delete === false)
 		{ ?>
+	<ul>
+		<li>Beseitige ungenutzten Datenmüll (zum Beispiel ungenutzte Bilder im Images Ordner)</li>
+		<li>Benenne alle Dateien webkonform bzw. SEO Konform um</li>
+	</ul>
 	<p>Dieses Projekt ist entstanden, um z.B. Joomla-Administratoren einer Redaktionsseite, die keinen Zugriff auf die Konsole des Host haben und auch sonst nicht genug Erfahrung mit Datenbanksystemen haben, die Arbeit zu erleichtern.</p>
 	<p>Es soll sie dabei unterstützen eine Massenumbenennung von Dateien und Verzeichnissen, samt Anpassung der Datenbank, in ein URL-Konformes Format vorzunehmen. Es berücksichtigt auch Werte, die in der Datenbank mit <code>json_encode()</code> und <code>serialize()</code> gespeichert wurden.</p>
+	<p>Zur Verwendung das Verzeichnis <code>tidyup_myfiles</code> in das Joomla Rootverzeichnis kopieren.</p>
+	<h3>Achtung</h3>
+	<p>Dieses Skript berücksichtigt <em>KEINE</em> Dateien die dynamisch bezogen werden. Das könnten zum Beispiel sein:</p>
+	<ul>
+		<li>Bildergalerien die aus einem Verzeichnis geladen werden.</li>
+		<li>"Hart codierte" Bildpfade die in Overrides oder Templatedateien o.ä verwendet werden.</li>
+	</ul>
 	<p>Zur Verwendung das Verzeichnis <code>tidyup_myfiles</code> in das Joomla Rootverzeichnis kopieren.</p>
 	<h3>Aufruf</h3>
 	<p><code>https://example.org/tidyup_myfiles/exec.php?rename=1[&amp;all=1][&amp;ext=jpg,jpeg][&amp;folder=images/UNTERORDNER][&amp;debug=off]</code></p>
@@ -295,7 +306,7 @@ if ($rename === false)
 		</li>
 		<li>
 			<p><code>https://example.org/tidyup_myfiles/exec.php?rename=1&amp;folder=images/UNTERORDNER</code><br>
-				Durchsucht das Verzeichnis <code>images/UNTERORDENR</code> nach Dateien mit der Endung <code>.pdf, .png, .jpg, .jpeg, .PDF, .PNG, .JPG, .JPEG</code> und Prüft sie auf URL-Konformität. Die Endungen werden kelingeschrieben und Leerzeichen durch <code>_</code> ersetzt, sowie Umlaute umgeschrieben. Es wird in der Datenbank nach Vorkommen der zu ändernden Dateien gesucht und ggf. Umbenannt.</p>
+				Durchsucht das Verzeichnis <code>images/UNTERORDNER</code> nach Dateien mit der Endung <code>.pdf, .png, .jpg, .jpeg, .PDF, .PNG, .JPG, .JPEG</code> und Prüft sie auf URL-Konformität. Die Endungen werden kelingeschrieben und Leerzeichen durch <code>_</code> ersetzt, sowie Umlaute umgeschrieben. Es wird in der Datenbank nach Vorkommen der zu ändernden Dateien gesucht und ggf. Umbenannt.</p>
 		</li>
 	</ul>
 	<p>Ein besonderer Danke geht an die Tester <em>Elisa Foltyn</em>, <em>Christiane Maier-Stadtherr</em> und <em>Thomas Finnern</em>, die viel Geduld und Nerven gezeigt haben.</p>
