@@ -23,7 +23,7 @@
 /**
  * Version
  */
-const _VERSION = '1.0.13';
+const _VERSION = '1.0.14-rc1';
 
 /**
  * Konstante für die Ausführung von Joomla
@@ -180,25 +180,39 @@ use Joomla\Filesystem\File;
 use Joomla\Filesystem\Folder;
 use Joomla\Input\Input;
 use Joomla\Utilities\ArrayHelper;
+use Joomla\CMS\Http\HttpFactory;
 
-Profiler::getInstance('Tidyup my files')->setStart($startTime, $startMem);
-?>
+Profiler::getInstance('Tidyup my files')->setStart($startTime, $startMem); ?>
 <!DOCTYPE html>
 <html lang="de">
 <head>
 	<meta charset="UTF-8">
 	<title>Tidyup my files (Version <?php echo _VERSION; ?>)</title>
 	<style>
-		body {font-size: 120%; line-height:1.3;}
-		pre {white-space: normal;}
+		body {
+			font-size: 120%;
+			line-height: 1.3;
+		}
+
+		pre {
+			white-space: normal;
+		}
+
 		code {
 			padding: 0.2em 0.4em;
 			margin: 0;
 			font-size: 85%;
-			background-color: rgba(27,31,35,0.1);
+			background-color: rgba(27, 31, 35, 0.1);
 			border-radius: 3px;
 		}
-		em {font-size: 95%;}
+
+		em {
+			font-size: 95%;
+		}
+
+		small {
+			font-size: 75%;
+		}
 	</style>
 </head>
 <body>
@@ -222,7 +236,14 @@ $path      = $input->getBool('path', false);
 $subfolder = $input->getBool('subfolder', false);
 $rename    = $input->getBool('rename', false);
 $delete    = $input->getBool('delete', false);
+$update    = $input->getBool('update', false);
 $output    = [];
+
+// Auf aktualisierungen prüfen
+update($update);
+
+ob_flush();
+flush();
 
 if ($rename === false)
 {
@@ -230,7 +251,7 @@ if ($rename === false)
 	$path = false;
 
 	if ($delete === false)
-		{ ?>
+	{ ?>
 	<p>Dieses Projekt ist entstanden, um z.B. Joomla-Administratoren einer Redaktionsseite, die keinen Zugriff auf die Konsole des Host haben und auch sonst nicht genug Erfahrung mit Datenbanksystemen haben, die Arbeit zu erleichtern.</p>
 	<p>Es soll sie dabei unterstützen eine Massenumbenennung von Dateien und Verzeichnissen, samt Anpassung der Datenbank, in ein URL-Konformes Format vorzunehmen. Es berücksichtigt auch Werte, die in der Datenbank mit <code>json_encode()</code> und <code>serialize()</code> gespeichert wurden.</p>
 	<p>Zur Verwendung das Verzeichnis <code>tidyup_myfiles</code> in das Joomla Rootverzeichnis kopieren.</p>
@@ -673,7 +694,7 @@ foreach ($arrTables as $strTable)
 
 	foreach ($tblRows as $tblRow)
 	{
-		if (++$search %80 === 0)
+		if (++$search % 80 === 0)
 		{
 			echo '.';
 
@@ -731,7 +752,7 @@ foreach ($arrTables as $strTable)
 				if (findFileInData($fileSrc, $value) === true)
 				{
 					$hits[] = $fileSrc;
-					$hits = ArrayHelper::arrayUnique($hits);
+					$hits   = ArrayHelper::arrayUnique($hits);
 
 					$arrFiles[$fileKey]['delete']                = false;
 					$arrFiles[$fileKey]['tabellen'][$strTable][] = $column;
@@ -934,9 +955,9 @@ if ($debug !== 'off')
 }
 ?>
 
-<br />
+<br/>
 <h4><?php echo Profiler::getInstance('Tidyup my files')->mark('Ende der Verarbeitung'); ?></h4>
-<br /><br /><br />
+<br/><br/><br/>
 </pre>
 </body>
 <?php
@@ -1111,10 +1132,89 @@ function pathMakeSafe($path, $seo = false)
 function pathMakeSeoSafe($path)
 {
 	$path = str_replace('-', ' ', $path);
-	$path  = Transliterate::utf8_latin_to_ascii($path);
+	$path = Transliterate::utf8_latin_to_ascii($path);
 	$path = trim(strtolower($path));
 	$path = preg_replace('/(\s|[^\/A-Za-z0-9\-])+/', '-', $path);
 	$path = trim($path, '-');
 
 	return $path;
+}
+
+/**
+ * Suche nach neueren Versionen auf Github
+ *
+ * @param   bool $action
+ *
+ * @return   void
+ * @sinse    1.0.14
+ */
+function update($action)
+{
+	$update     = new stdClass;
+	$interval   = 1;
+	$date       = date('YmdHi');
+	$now        = new DateTime($date);
+	$updateFile = str_replace('\\', '/', dirname(__FILE__) . '/update.txt');
+
+	if (file_exists($updateFile))
+	{
+		if ($action === true)
+		{
+			@unlink($updateFile);
+		}
+		else
+		{
+			$update = json_decode(file_get_contents($updateFile));
+		}
+	}
+
+	if (!empty($update->date))
+	{
+		$intervalDate = new DateTime($update->date);
+		$interval     = date_diff($now, $intervalDate)->h;
+	}
+
+
+	if ($action === true || $interval > 0)
+	{
+		@unlink($updateFile);
+
+		$repository = 'https://api.github.com/repos/JoomTools/tidyup_myfiles/git/refs/tags';
+
+		$http = HttpFactory::getHttp();
+		$http->setOption('userAgent', 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:56.0) Gecko/20100101 Firefox/56.0');
+
+		$data          = $http->get($repository);
+		$latest        = array_pop(json_decode($data->body));
+		$latestVersion = str_replace('refs/tags/', '', $latest->ref);
+
+		$update->date    = $date;
+		$update->message = '';
+
+		if ($data->code === 200)
+		{
+			if (version_compare(_VERSION, $latestVersion, 'lt'))
+			{
+				$downloadLink    = 'https://github.com/JoomTools/tidyup_myfiles/archive/' . $latestVersion . '.zip';
+				$update->message .= '<p>';
+				$update->message .= '<strong style="color: darkgreen">Neue Version gefunden: ' . $latestVersion . '</strong><br />';
+
+				$tag = $http->get($latest->object->url);
+				$tag = json_decode($tag->body);
+
+				$message         = str_replace($latestVersion . "\n\n", '', $tag->message);
+				$update->message .= '<small>' . nl2br($message) . '</small><br /><br />';
+				$update->message .= 'Aktuelle Version herunterladen: <a href="' . $downloadLink . '"><code>' . $latestVersion . '</code></a><br />';
+				$update->message .= 'Auf Github anschauen: <a href="https://github.com/JoomTools/tidyup_myfiles"><code>JoomTools/tidyup_myfiles</code></a><br /></p>';
+			}
+		}
+		else if ($data->code !== 403)
+		{
+			$update->message .= '<small style="color: red">Konnte nicht nach Aktualisierungen suchen, die Verbindung zum Repository <a href="https://github.com/JoomTools/tidyup_myfiles"><code>JoomTools/tidyup_myfiles</code></a> war nicht möglich.</small>';
+		}
+
+		file_put_contents($updateFile, json_encode($update));
+	}
+
+	echo $update->message;
 }
