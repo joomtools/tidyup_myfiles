@@ -23,7 +23,7 @@
 /**
  * Version
  */
-const _VERSION = '1.0.15';
+const _VERSION = '1.0.16';
 
 /**
  * Konstante für die Ausführung von Joomla
@@ -453,7 +453,7 @@ foreach ($files as $file)
 		continue;
 	}
 
-	$newName = stringMakeSafe($fileParts['filename'] . '.' . strtolower($fileParts['extension']), $seo);
+	$newName = stringMakeSafe($fileParts['filename'], $seo) . '.' . strtolower($fileParts['extension']);
 
 	$source = ltrim(str_replace(JPATH_ROOT, '', $file), '\\/');
 	$source = str_replace('\\', '/', $source);
