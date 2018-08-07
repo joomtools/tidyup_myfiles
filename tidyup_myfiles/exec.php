@@ -23,7 +23,7 @@
 /**
  * Version
  */
-const _VERSION = '1.0.14-rc2';
+const _VERSION = '1.0.15';
 
 /**
  * Konstante für die Ausführung von Joomla
@@ -1189,6 +1189,7 @@ function update($action)
 		$latestVersion = str_replace('refs/tags/', '', $latest->ref);
 
 		$update->date    = $date;
+		$update->version = $latestVersion;
 		$update->message = '';
 
 		if ($data->code === 200)
@@ -1216,5 +1217,8 @@ function update($action)
 		file_put_contents($updateFile, json_encode($update));
 	}
 
-	echo $update->message;
+	if (version_compare(_VERSION, $update->version, 'lt'))
+	{
+		echo $update->message;
+	}
 }
