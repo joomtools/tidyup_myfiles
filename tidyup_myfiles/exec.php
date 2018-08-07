@@ -23,7 +23,7 @@
 /**
  * Version
  */
-const _VERSION = '1.0.16';
+const _VERSION = '1.0.17';
 
 /**
  * Konstante für die Ausführung von Joomla
@@ -339,7 +339,7 @@ $extUpper           = explode(',', strtoupper($input->getString('ext', 'pdf,png,
 $ext                = array_filter(
 	array_map('trim', array_merge($extLower, $extUpper))
 );
-$debug              = strtolower($input->getString('debug', ''));
+$debug              = $input->getString('debug', '');
 $extensions         = '\.' . implode('|\.', $ext);
 $relativeFolder     = trim(
 	str_replace('\\', '/', $input->getPath('folder', 'images')),
@@ -420,6 +420,11 @@ if (!empty($input->getString('exclude')))
 if (!empty($input->getCmd('excludeRegex')))
 {
 	echo '- exclude=' . $input->getCmd('excludeRegex') . '<br />';
+}
+
+if (!empty($input->getString('debug')))
+{
+	echo '- debug=' . $input->getString('debug') . '<br />';
 }
 
 echo '<br /><br />';
