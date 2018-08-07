@@ -23,7 +23,7 @@
 /**
  * Version
  */
-const _VERSION = '1.0.14-rc1';
+const _VERSION = '1.0.14-rc2';
 
 /**
  * Konstante für die Ausführung von Joomla
