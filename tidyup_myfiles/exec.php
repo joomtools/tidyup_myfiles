@@ -23,7 +23,7 @@
 /**
  * Version
  */
-const _VERSION = '1.0.17';
+const _VERSION = '1.0.18-rc1';
 
 /**
  * Konstante für die Ausführung von Joomla
@@ -776,8 +776,7 @@ foreach ($arrTables as $strTable)
 					$dbChanged                    = true;
 				}
 
-				if ($fileParams['exists'] === false && $valChanged === false
-					&& ($all === true && $delete === true))
+				if ($fileParams['exists'] === false && $valChanged === false && $all === true)
 				{
 					if ($arrFiles[$fileKey]['delete'] === false && $fileSrc != $fileDest)
 					{
