@@ -23,7 +23,7 @@
 /**
  * Version
  */
-const _VERSION = '1.0.18';
+const _VERSION = '1.0.19-rc1';
 
 /**
  * Konstante für die Ausführung von Joomla
@@ -140,6 +140,12 @@ const _EXCLUDE_TABLES = array(
 	'zoo_zoofilter_searches',
 );
 
+
+/**
+ * Basispfad des Skriptes
+ */
+define ('SCRIPT_BASE', getcwd());
+
 // Startzeit und Speichernutzung für Auswertung
 $startTime = microtime(1);
 $startMem  = memory_get_usage();
@@ -151,14 +157,14 @@ $startMem  = memory_get_usage();
 @ini_set('track_errors', 1);
 
 // Load system defines
-if (file_exists(dirname(getcwd()) . '/defines.php'))
+if (file_exists(dirname(SCRIPT_BASE) . '/defines.php'))
 {
-	require_once dirname(getcwd()) . '/defines.php';
+	require_once dirname(SCRIPT_BASE) . '/defines.php';
 }
 
 if (!defined('_JDEFINES'))
 {
-	define('JPATH_BASE', dirname(getcwd()));
+	define('JPATH_BASE', dirname(SCRIPT_BASE));
 	require_once JPATH_BASE . '/includes/defines.php';
 }
 
@@ -1079,7 +1085,9 @@ function file_exists_cs($file)
 		return false;
 	}
 
-	if (strcmp(realpath($file), $file) == 0)
+	$realFile = str_replace('\\', '/', realpath($file));
+
+	if (strcmp($realFile, $file) == 0)
 	{
 		return true;
 	}
@@ -1158,7 +1166,7 @@ function update($action)
 	$interval   = 1;
 	$date       = date('YmdHi');
 	$now        = new DateTime($date);
-	$updateFile = str_replace('\\', '/', dirname(__FILE__) . '/update.txt');
+	$updateFile = str_replace('\\', '/', SCRIPT_BASE . '/update.txt');
 
 	if (file_exists($updateFile))
 	{
