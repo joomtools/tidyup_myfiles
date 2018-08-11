@@ -155,6 +155,7 @@ $startMem  = memory_get_usage();
 @error_reporting(E_ERROR | E_WARNING | E_PARSE & ~E_NOTICE);
 @ini_set('display_errors', 1);
 @ini_set('track_errors', 1);
+@ini_set('memory_limit', '128M');
 
 // Load system defines
 if (file_exists(dirname(SCRIPT_BASE) . '/defines.php'))
