@@ -42,38 +42,40 @@ _Die Parameter `delete=1` und `rename=1` können unabhängig von einander oder g
 
 
 ### Zusatzparameter
-  * `path=1` Alle Pfade URL-Safe umbenennen, die nicht als gelöscht gekennzeichnet werden - **\[default: 0\]**<br>
+* `path=1` Alle Pfade URL-Safe umbenennen, die nicht als gelöscht gekennzeichnet werden - **\[default: 0\]**<br>
   `rename=1` muss verwendet werden.<br>
   _Ist dieser Wert nicht gesetzt, wird nur nach den Dateinamen in der Datenbank gesucht und umbenannt._
 
-  * `all=1` Alle Dateien URL-Konform umbenennen - **\[default: 0\]**<br>
+* `all=1` Alle Dateien URL-Konform umbenennen - **\[default: 0\]**<br>
   `rename=1` muss verwendet werden.<br>
   _Wird ignoriert, wenn `delete=1` eingesetzt wird._
 
-  * `seo=1` Alle Dateien URL-Konform **und** SEO-Konform umbenennen - **\[default: 0\]**<br>
+* `seo=1` Alle Dateien URL-Konform **und** SEO-Konform umbenennen - **\[default: 0\]**<br>
  `rename=1` muss verwendet werden.<br>
   _Statt Unterstriche `_` und `CameCase` zu erlauben, wird alles kleingeschrieben und `_` in `-` umgewandelt.<br>
   Wandelt auch die Pfade um, wenn `path=1` verwendet wird._
 
-  * `folder=images/banner` Ordner im Joomla Rootverzeichnis, indem nach Dateien gesucht werden soll - **\[default: images\]**
+* `folder=images/banner` Ordner im Joomla Rootverzeichnis, indem nach Dateien gesucht werden soll - **\[default: images\]**
 
-  * `subfolder=1` Alle Unterordner rekursiv nach Dateien durchsuchen - **\[default: 0\]**
+* `subfolder=1` Alle Unterordner rekursiv nach Dateien durchsuchen - **\[default: 0\]**
 
-  * `ext=pdf,png,doc` Dateiendungen nach denen gesucht werden soll (Werte durch Komma `,` getrennt) - **\[default: pdf,png,jpg,jpeg\]**<br>
+* `emptyFolder=1` Alle leeren Ordner löschen - **\[default: 0\]**<br>
+  _Wenn `subfolder=1` verwendet wird, werden auch leere Unterordner gelöscht_
+
+* `ext=pdf,png,doc` Dateiendungen nach denen gesucht werden soll (Werte durch Komma `,` getrennt) - **\[default: pdf,png,jpg,jpeg\]**<br>
   _Jede angegebene Endung wird automatisch auch in Großbuchstaben gesucht._
 
-  * `exclude=tmp.png,thumb,thumbnails` Datei- oder Ordnernamen die von der Suche ausgeschlossen werden sollen (Werte durch Komma `,` getrennt)
+* `exclude=tmp.png,thumb,thumbnails` Datei- oder Ordnernamen die von der Suche ausgeschlossen werden sollen (Werte durch Komma `,` getrennt)
 
-  * `excludeRegex=tmp,thumb,thumbnails` Bestimmte Schlagworte in Datei- oder Ordnernamen die von der Suche ausgeschlossen werden sollen (Werte durch Komma `,` getrennt)
+* `excludeRegex=tmp,thumb,thumbnails` Bestimmte Schlagworte in Datei- oder Ordnernamen die von der Suche ausgeschlossen werden sollen (Werte durch Komma `,` getrennt)
 
-  * `debug=off` Wird dieser Parameter gesetzt, wird der Testmodus abgestellt und die Änderungen durchgeführt<br>
+* `debug=off` Wird dieser Parameter gesetzt, wird der Testmodus abgestellt und die Änderungen durchgeführt<br>
   _Solange der Parameter debug=off nicht verwendet wird, ist es nur eine Simulation, es kann also nichts passieren._
   
 
 ### Beispiele:
 
-*  
-  `https://example.org/tidyup_myfiles/exec.php`<br>
+* `https://example.org/tidyup_myfiles/exec.php`<br>
   Gibt diese Hilfe aus
 
 * `https://example.org/tidyup_myfiles/exec.php?rename=1&folder=images/UNTERORDNER`<br>
@@ -126,21 +128,24 @@ _The parameters `delete=1` and `rename=1` can be used independently or together,
 
 ### Additional parameters
 * `path=1` Rename all paths URL-Safe that are not marked as deleted - **\[default: 0\]**<br>
-  `rename=1` must be used in connection to the path parameter<br>
+  `rename=1` must be used in connection to this parameter<br>
   _If this value is not set, only the file names in the database are searched for and renamed._
 
 * `all=1` rename all files websafe - **\[default: 0\]***<br>
-  `rename=1` must be used in connection to the all parameter<br>
+  `rename=1` must be used in connection to this parameter<br>
   _Will be ignored if `delete=1` is used._
 
 * `seo=1` Rename all files websafe **and** SEO safe - **\[default: 0\]**<br>
- `rename=1` must be used in connection to the seo parameter.<br>
+ `rename=1` must be used in connection to this parameter.<br>
   _Instead of allowing underscores `_` and `CamelCase`, everything is lower case and `_` is converted to `-`.<br>
   Also converts the paths when `path=1` is used._
 
 * `folder=images/SUBFOLDER` folder in the Joomla root directory to search for files - **\[default: images\]**
 
 * `subfolder=1` Search all subfolders recursively for files - **\[default: 0\]**
+
+* `emptyFolder=1` Delete empty folder - **\[default: 0\]**<br>
+  _If `subfolder=1` is used, also empty subfolder will be deleted_
 
 * `ext=pdf,png,doc` file extensions to search for (values separated by commas `,`) - **\[default: pdf,png,jpg,jpeg\]**<br>
   _Each specified extension is automatically searched in upper case letters too._
