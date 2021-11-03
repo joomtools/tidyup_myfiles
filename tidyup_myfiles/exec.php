@@ -1275,7 +1275,7 @@ function update($action)
 	{
 		@unlink($updateFile);
 
-		$repository = 'https://api.github.com/repos/JoomTools/tidyup_myfiles/git/refs/tags';
+		$repository = 'https://api.github.com/repos/joomtools/tidyup_myfiles/git/refs/tags';
 
 		$http = HttpFactory::getHttp();
 		$http->setOption('userAgent', 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:56.0) Gecko/20100101 Firefox/56.0');
@@ -1292,7 +1292,7 @@ function update($action)
 		{
 			if (version_compare(_VERSION, $latestVersion, 'lt'))
 			{
-				$downloadLink    = 'https://github.com/JoomTools/tidyup_myfiles/archive/' . $latestVersion . '.zip';
+				$downloadLink    = 'https://github.com/joomtools/tidyup_myfiles/archive/' . $latestVersion . '.zip';
 				$update->message .= '<p>';
 				$update->message .= '<strong style="color: darkgreen">Neue Version gefunden: ' . $latestVersion . '</strong><br />';
 
@@ -1302,12 +1302,12 @@ function update($action)
 				$message         = str_replace($latestVersion . "\n\n", '', $tag->message);
 				$update->message .= '<small>' . nl2br($message) . '</small><br /><br />';
 				$update->message .= 'Aktuelle Version herunterladen: <a href="' . $downloadLink . '"><code>' . $latestVersion . '</code></a><br />';
-				$update->message .= 'Auf Github anschauen: <a href="https://github.com/JoomTools/tidyup_myfiles"><code>JoomTools/tidyup_myfiles</code></a><br /></p>';
+				$update->message .= 'Auf Github anschauen: <a href="https://github.com/joomtools/tidyup_myfiles"><code>joomtools/tidyup_myfiles</code></a><br /></p>';
 			}
 		}
 		else if ($data->code !== 403)
 		{
-			$update->message .= '<small style="color: red">Konnte nicht nach Aktualisierungen suchen, die Verbindung zum Repository <a href="https://github.com/JoomTools/tidyup_myfiles"><code>JoomTools/tidyup_myfiles</code></a> war nicht möglich.</small>';
+			$update->message .= '<small style="color: red">Konnte nicht nach Aktualisierungen suchen, die Verbindung zum Repository <a href="https://github.com/joomtools/tidyup_myfiles"><code>joomtools/tidyup_myfiles</code></a> war nicht möglich.</small>';
 		}
 
 		file_put_contents($updateFile, json_encode($update));
