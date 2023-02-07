@@ -20,6 +20,17 @@
  * @license     GNU General Public License version 3 or later; see LICENSE
  */
 
+// Load needed Namespaces
+use Joomla\CMS\Factory;
+use Joomla\CMS\Http\HttpFactory;
+use Joomla\CMS\Language\Language;
+use Joomla\CMS\Language\Transliterate;
+use Joomla\CMS\Profiler\Profiler;
+use Joomla\Filesystem\File;
+use Joomla\Filesystem\Folder;
+use Joomla\Input\Input;
+use Joomla\Utilities\ArrayHelper;
+
 /**
  * Version
  */
@@ -180,25 +191,71 @@ if (!defined('_JDEFINES'))
 	require_once JPATH_BASE . '/includes/defines.php';
 }
 
+$joomla4 = file_exists(JPATH_BASE . '/includes/app.php');
+
+// Check for presence of vendor dependencies not included in the git repository
+if (
+	$joomla4
+	&& (
+		!file_exists(JPATH_BASE . '/libraries/vendor/autoload.php')
+		|| !is_dir(JPATH_BASE . '/media/vendor')
+	)
+)
+{
+	echo 'It looks like you are trying to run Joomla! from our git repository.' . PHP_EOL;
+	echo 'To do so requires you complete a couple of extra steps first.' . PHP_EOL;
+	echo 'Please see https://docs.joomla.org/Special:MyLanguage/J4.x:Setting_Up_Your_Local_Environment for further details.' . PHP_EOL;
+
+	exit;
+}
+
+// Check if installed
+if (
+	!file_exists(JPATH_BASE . '/configuration.php')
+	|| (filesize(JPATH_BASE . '/configuration.php') < 10)
+) {
+	echo 'Keine configuration.php gefunden, Joomla muss installiert sein.' . PHP_EOL;
+
+	exit;
+}
+
 // Get the framework.
-require_once JPATH_LIBRARIES . '/import.legacy.php';
+require_once JPATH_BASE . '/includes/framework.php';
+
+if ($joomla4)
+{
+// Boot the DI container
+	$container = \Joomla\CMS\Factory::getContainer();
+
+	/*
+	 * Alias the session service keys to the web session service as that is the primary session backend for this application
+	 *
+	 * In addition to aliasing "common" service keys, we also create aliases for the PHP classes to ensure autowiring objects
+	 * is supported.  This includes aliases for aliased class names, and the keys for aliased class names should be considered
+	 * deprecated to be removed when the class name alias is removed as well.
+	 */
+	$container->alias('session.web', 'session.web.site')
+		->alias('session', 'session.web.site')
+		->alias('JSession', 'session.web.site')
+		->alias(\Joomla\CMS\Session\Session::class, 'session.web.site')
+		->alias(\Joomla\Session\Session::class, 'session.web.site')
+		->alias(\Joomla\Session\SessionInterface::class, 'session.web.site');
+
+// Instantiate the application.
+	$app = $container->get(\Joomla\CMS\Application\SiteApplication::class);
+
+// Set the application as global app
+	\Joomla\CMS\Factory::$application = $app;
+}
+
+// Get the framework.
+//require_once JPATH_LIBRARIES . '/import.legacy.php';
 
 // Bootstrap the CMS libraries.
-require_once JPATH_LIBRARIES . '/cms.php';
+//require_once JPATH_LIBRARIES . '/cms.php';
 
 // Import the configuration.
-require_once JPATH_CONFIGURATION . '/configuration.php';
-
-// Load needed Namespaces
-use Joomla\CMS\Factory;
-use Joomla\CMS\Http\HttpFactory;
-use Joomla\CMS\Language\Language;
-use Joomla\CMS\Language\Transliterate;
-use Joomla\CMS\Profiler\Profiler;
-use Joomla\Filesystem\File;
-use Joomla\Filesystem\Folder;
-use Joomla\Input\Input;
-use Joomla\Utilities\ArrayHelper;
+//require_once JPATH_CONFIGURATION . '/configuration.php';
 
 Profiler::getInstance('Tidyup my files')->setStart($startTime, $startMem); ?>
 	<!DOCTYPE html>
@@ -513,12 +570,12 @@ Profiler::getInstance('Tidyup my files')->setStart($startTime, $startMem); ?>
 		if ((file_exists_cs(JPATH_ROOT . '/' . $destination) && $rename === true)
 			|| array_key_exists($destination, $arrFiles))
 		{
-			$arrFile['exist'] = true;
+			$arrFile['exists'] = true;
 		}
 
 		if ($source != $destination)
 		{
-			if ($arrFile['exist'] === true)
+			if ($arrFile['exists'] === true)
 			{
 				$output['toExclude'][] = $source . ' -> <span style="color: red;">' . $destination . '</span>';
 
@@ -1281,7 +1338,8 @@ function update($action)
 		$http->setOption('userAgent', 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:56.0) Gecko/20100101 Firefox/56.0');
 
 		$data          = $http->get($repository);
-		$latest        = array_pop(json_decode($data->body));
+		$response      = json_decode($data->body);
+		$latest        = array_pop($response);
 		$latestVersion = str_replace('refs/tags/', '', $latest->ref);
 
 		$update->date    = $date;
