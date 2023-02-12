@@ -21,6 +21,7 @@
  */
 
 // Load needed Namespaces
+use Joomla\CMS\Application\SiteApplication;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Http\HttpFactory;
 use Joomla\CMS\Language\Language;
@@ -29,24 +30,26 @@ use Joomla\CMS\Profiler\Profiler;
 use Joomla\Filesystem\File;
 use Joomla\Filesystem\Folder;
 use Joomla\Input\Input;
+use Joomla\Session\Session;
+use Joomla\Session\SessionInterface;
 use Joomla\Utilities\ArrayHelper;
 
 /**
  * Version
  */
-const _VERSION = '1.1.0';
+const _VERSION        = '2.0.0';
 
 /**
  * Konstante für die Ausführung von Joomla
  */
-const _JEXEC = 1;
+const _JEXEC          = 1;
 
 /**
  * Tabellennamen ohne Prefix bei denen nur
  * nach dem Dateinamen gesucht werden soll
  */
 const _ONLY_FILENAMES = array(
-	'rsgallery2_files',
+    'rsgallery2_files',
 );
 
 /**
@@ -54,113 +57,112 @@ const _ONLY_FILENAMES = array(
  * Suche ausgeschlossen werden können
  */
 const _EXCLUDE_TABLES = array(
-	'advancedmodules',
-	'ak_profiles',
-	'ak_stats',
-	'ak_storage',
-	'akeeba_common',
-	'assets',
-	'associations',
-//	'banner_clients',
-//	'banner_tracks',
-//	'banners',
-//	'categories',
-//	'contact_details',
-//	'content',
-	'content_frontpage',
-	'content_rating',
-//	'content_types',
-	'contentitem_tag_map',
-	'core_log_searches',
-//	'extensions',
-	'fields',
-//	'fields_categories',
-//	'fields_groups',
-//	'fields_values',
-//	'finder_filters',
-//	'finder_links',
-	'finder_links_terms0',
-	'finder_links_terms1',
-	'finder_links_terms2',
-	'finder_links_terms3',
-	'finder_links_terms4',
-	'finder_links_terms5',
-	'finder_links_terms6',
-	'finder_links_terms7',
-	'finder_links_terms8',
-	'finder_links_terms9',
-	'finder_links_termsa',
-	'finder_links_termsb',
-	'finder_links_termsc',
-	'finder_links_termsd',
-	'finder_links_termse',
-	'finder_links_termsf',
-	'finder_taxonomy',
-	'finder_taxonomy_map',
-	'finder_terms',
-	'finder_terms_common',
-	'finder_tokens',
-	'finder_tokens_aggregate',
-	'finder_types',
-	'jevents_catmap',
-	'jevents_exception',
-	'jevents_filtermap',
-	'jevents_repetition',
-	'jevents_rrule',
-	'jev_users',
-	'languages',
-//	'menu',
-	'menu_types',
-//	'messages',
-	'messages_cfg',
-//	'modules',
-	'modules_menu',
-//	'newsfeeds',
-//	'overrider',
-	'patchtester_pulls',
-	'patchtester_tests',
-	'phocamaps_icon',
-	'phocamaps_map',
-//	'postinstall_messages',
-//	'redirect_links',
-	'rsgallery2_config',
-	'schemas',
-	'session',
-	'sh404sef_aliases',
-	'sh404sef_hits_404s',
-	'sh404sef_hits_aliases',
-	'sh404sef_hits_shurls',
-	'sh404sef_keystore',
-	'sh404sef_metas',
-	'sh404sef_pageids',
-	'sh404sef_urls',
-	'shlib_consumers',
-	'shlib_resources',
-//	'tags',
-//	'template_styles',
-	'ucm_base',
-//	'ucm_content',
-//	'ucm_history',
-	'update_sites',
-	'update_sites_extensions',
-	'updates',
-	'user_keys',
-	'user_notes',
-	'user_profiles',
-	'user_usergroup_map',
-	'usergroups',
-	'users',
-	'utf8_conversion',
-	'viewlevels',
-//	'wf_profiles',
-	'zoo_category_item',
-	'zoo_rating',
-	'zoo_search_index',
-	'zoo_tag',
-	'zoo_version',
-	'zoo_zoofilter_searches',
+    'advancedmodules',
+    'ak_profiles',
+    'ak_stats',
+    'ak_storage',
+    'akeeba_common',
+    'assets',
+    'associations',
+    //	'banner_clients',
+    //	'banner_tracks',
+    //	'banners',
+    //	'categories',
+    //	'contact_details',
+    //	'content',
+    'content_frontpage',
+    'content_rating',
+    //	'content_types',
+    'contentitem_tag_map',
+    'core_log_searches',
+    //	'extensions',
+    'fields',
+    //	'fields_categories',
+    //	'fields_groups',
+    //	'fields_values',
+    //	'finder_filters',
+    //	'finder_links',
+    'finder_links_terms0',
+    'finder_links_terms1',
+    'finder_links_terms2',
+    'finder_links_terms3',
+    'finder_links_terms4',
+    'finder_links_terms5',
+    'finder_links_terms6',
+    'finder_links_terms7',
+    'finder_links_terms8',
+    'finder_links_terms9',
+    'finder_links_termsa',
+    'finder_links_termsb',
+    'finder_links_termsc',
+    'finder_links_termsd',
+    'finder_links_termse',
+    'finder_links_termsf',
+    'finder_taxonomy',
+    'finder_taxonomy_map',
+    'finder_terms',
+    'finder_terms_common',
+    'finder_tokens',
+    'finder_tokens_aggregate',
+    'finder_types',
+    'jevents_catmap',
+    'jevents_exception',
+    'jevents_filtermap',
+    'jevents_repetition',
+    'jevents_rrule',
+    'jev_users',
+    'languages',
+    //	'menu',
+    'menu_types',
+    //	'messages',
+    'messages_cfg',
+    //	'modules',
+    'modules_menu',
+    //	'newsfeeds',
+    //	'overrider',
+    'patchtester_pulls',
+    'patchtester_tests',
+    'phocamaps_icon',
+    'phocamaps_map',
+    //	'postinstall_messages',
+    //	'redirect_links',
+    'rsgallery2_config',
+    'schemas',
+    'session',
+    'sh404sef_aliases',
+    'sh404sef_hits_404s',
+    'sh404sef_hits_aliases',
+    'sh404sef_hits_shurls',
+    'sh404sef_keystore',
+    'sh404sef_metas',
+    'sh404sef_pageids',
+    'sh404sef_urls',
+    'shlib_consumers',
+    'shlib_resources',
+    //	'tags',
+    //	'template_styles',
+    'ucm_base',
+    //	'ucm_content',
+    //	'ucm_history',
+    'update_sites',
+    'update_sites_extensions',
+    'updates',
+    'user_keys',
+    'user_notes',
+    'user_profiles',
+    'user_usergroup_map',
+    'usergroups',
+    'users',
+    'utf8_conversion',
+    'viewlevels',
+    //	'wf_profiles',
+    'zoo_category_item',
+    'zoo_rating',
+    'zoo_search_index',
+    'zoo_tag',
+    'zoo_version',
+    'zoo_zoofilter_searches',
 );
-
 
 /**
  * Basispfad des Skriptes
@@ -180,72 +182,68 @@ $date      = date('YmdHi');
 @ini_set('memory_limit', '256M');
 
 // Load system defines
-if (file_exists(dirname(SCRIPT_BASE) . '/defines.php'))
-{
-	require_once dirname(SCRIPT_BASE) . '/defines.php';
+if (file_exists(dirname(SCRIPT_BASE) . '/defines.php')) {
+    require_once dirname(SCRIPT_BASE) . '/defines.php';
 }
 
-if (!defined('_JDEFINES'))
-{
-	define('JPATH_BASE', dirname(SCRIPT_BASE));
-	require_once JPATH_BASE . '/includes/defines.php';
+if (!defined('_JDEFINES')) {
+    define('JPATH_BASE', dirname(SCRIPT_BASE));
+    require_once JPATH_BASE . '/includes/defines.php';
 }
 
-$joomla4 = file_exists(JPATH_BASE . '/includes/app.php');
+$joomla4              = file_exists(JPATH_BASE . '/includes/app.php');
 
 // Check for presence of vendor dependencies not included in the git repository
 if (
-	$joomla4
-	&& (
-		!file_exists(JPATH_BASE . '/libraries/vendor/autoload.php')
-		|| !is_dir(JPATH_BASE . '/media/vendor')
-	)
-)
-{
-	echo 'It looks like you are trying to run Joomla! from our git repository.' . PHP_EOL;
-	echo 'To do so requires you complete a couple of extra steps first.' . PHP_EOL;
-	echo 'Please see https://docs.joomla.org/Special:MyLanguage/J4.x:Setting_Up_Your_Local_Environment for further details.' . PHP_EOL;
+    $joomla4
+    && (
+        !file_exists(JPATH_BASE . '/libraries/vendor/autoload.php')
+        || !is_dir(JPATH_BASE . '/media/vendor')
+    )
+) {
+    echo 'It looks like you are trying to run Joomla! from our git repository.' . PHP_EOL;
+    echo 'To do so requires you complete a couple of extra steps first.' . PHP_EOL;
+    echo 'Please see https://docs.joomla.org/Special:MyLanguage/J4.x:Setting_Up_Your_Local_Environment for further details.' . PHP_EOL;
 
-	exit;
+    exit;
 }
 
 // Check if installed
 if (
-	!file_exists(JPATH_BASE . '/configuration.php')
-	|| (filesize(JPATH_BASE . '/configuration.php') < 10)
+    !file_exists(JPATH_BASE . '/configuration.php')
+    || (filesize(JPATH_BASE . '/configuration.php') < 10)
 ) {
-	echo 'Keine configuration.php gefunden, Joomla muss installiert sein.' . PHP_EOL;
+    echo 'Keine configuration.php gefunden, Joomla muss installiert sein.' . PHP_EOL;
 
-	exit;
+    exit;
 }
 
 // Get the framework.
 require_once JPATH_BASE . '/includes/framework.php';
 
-if ($joomla4)
-{
-// Boot the DI container
-	$container = \Joomla\CMS\Factory::getContainer();
+if ($joomla4) {
+    // Boot the DI container
+    $container = Factory::getContainer();
 
-	/*
-	 * Alias the session service keys to the web session service as that is the primary session backend for this application
-	 *
-	 * In addition to aliasing "common" service keys, we also create aliases for the PHP classes to ensure autowiring objects
-	 * is supported.  This includes aliases for aliased class names, and the keys for aliased class names should be considered
-	 * deprecated to be removed when the class name alias is removed as well.
-	 */
-	$container->alias('session.web', 'session.web.site')
-		->alias('session', 'session.web.site')
-		->alias('JSession', 'session.web.site')
-		->alias(\Joomla\CMS\Session\Session::class, 'session.web.site')
-		->alias(\Joomla\Session\Session::class, 'session.web.site')
-		->alias(\Joomla\Session\SessionInterface::class, 'session.web.site');
+    /*
+     * Alias the session service keys to the web session service as that is the primary session backend for this application
+     *
+     * In addition to aliasing "common" service keys, we also create aliases for the PHP classes to ensure autowiring objects
+     * is supported.  This includes aliases for aliased class names, and the keys for aliased class names should be considered
+     * deprecated to be removed when the class name alias is removed as well.
+     */
+    $container->alias('session.web', 'session.web.site')
+        ->alias('session', 'session.web.site')
+        ->alias('JSession', 'session.web.site')
+        ->alias(\Joomla\CMS\Session\Session::class, 'session.web.site')
+        ->alias(Session::class, 'session.web.site')
+        ->alias(SessionInterface::class, 'session.web.site');
 
-// Instantiate the application.
-	$app = $container->get(\Joomla\CMS\Application\SiteApplication::class);
+    // Instantiate the application.
+    $app = $container->get(SiteApplication::class);
 
-// Set the application as global app
-	\Joomla\CMS\Factory::$application = $app;
+    // Set the application as global app
+    Factory::$application = $app;
 }
 
 // Get the framework.
@@ -294,40 +292,38 @@ Profiler::getInstance('Tidyup my files')->setStart($startTime, $startMem); ?>
 <pre>
 <h1>Tidyup my files (Version <?php echo _VERSION; ?>)</h1>
 	<?php
-	$input = new Input;
+    $input = new Input;
 
-	// Load Library language
-	$language = $input->getWord('lang', '');
-	$lang     = Language::getInstance($language);
+    // Load Library language
+    $language = $input->getWord('lang', '');
+    $lang     = Language::getInstance($language);
 
-	// Try the files_joomla file in the current language (without allowing the loading of the file in the default language)
-	$lang->load('files_joomla.sys', JPATH_SITE, null, false, false)
-// Fallback to the files_joomla file in the default language
-	|| $lang->load('files_joomla.sys', JPATH_SITE, null, true);
+    // Try the files_joomla file in the current language (without allowing the loading of the file in the default language)
+    $lang->load('files_joomla.sys', JPATH_SITE, null, false, false)
+    // Fallback to the files_joomla file in the default language
+    || $lang->load('files_joomla.sys', JPATH_SITE, null, true);
 
-	$all         = $input->getBool('all', false);
-	$seo         = $input->getBool('seo', false);
-	$path        = $input->getBool('path', false);
-	$subfolder   = $input->getBool('subfolder', false);
-	$emptyFolder = $input->getBool('emptyFolder', false);
-	$rename      = $input->getBool('rename', false);
-	$delete      = $input->getBool('delete', false);
-	$update      = $input->getBool('update', false);
-	$output      = [];
+    $all         = $input->getBool('all', false);
+    $seo         = $input->getBool('seo', false);
+    $path        = $input->getBool('path', false);
+    $subfolder   = $input->getBool('subfolder', false);
+    $emptyFolder = $input->getBool('emptyFolder', false);
+    $rename      = $input->getBool('rename', false);
+    $delete      = $input->getBool('delete', false);
+    $update      = $input->getBool('update', false);
+    $output      = [];
 
-	// Auf aktualisierungen prüfen
-	update($update);
+    // Auf aktualisierungen prüfen
+    update($update);
 
-	ob_flush();
-	flush();
+    ob_flush();
+    flush();
 
-	if ($rename === false)
-	{
-		$all  = false;
-		$path = false;
+    if ($rename === false) {
+        $all  = false;
+        $path = false;
 
-		if ($delete === false)
-		{ ?>
+        if ($delete === false) { ?>
 			<p>Dieses Projekt ist entstanden, um z.B. Joomla-Administratoren einer Redaktionsseite, die keinen Zugriff auf die Konsole des Host haben und auch sonst nicht genug Erfahrung mit Datenbanksystemen haben, die Arbeit zu erleichtern.</p>
 			<p>Es soll sie dabei unterstützen eine Massenumbenennung von Dateien und Verzeichnissen, samt Anpassung der Datenbank, in ein URL-Konformes Format vorzunehmen. Es berücksichtigt auch Werte, die in der Datenbank mit <code>json_encode()</code> und <code>serialize()</code> gespeichert wurden.</p>
 			<p>Zur Verwendung das Verzeichnis <code>tidyup_myfiles</code> in das Joomla Rootverzeichnis kopieren.</p>
@@ -400,710 +396,604 @@ Profiler::getInstance('Tidyup my files')->setStart($startTime, $startMem); ?>
 		</li>
 	</ul>
 			<p>Ein besonderer Danke geht an die Tester <em>Elisa Foltyn</em>, <em>Christiane Maier-Stadtherr</em> und <em>Thomas Finnern</em>, die viel Geduld und Nerven gezeigt haben.</p>
-			<?php die;
-		}
-	}
-
-	$excludefilterBase  = array('^\..*');
-	$excludefilterParam = explode(',', $input->getCmd('excludeRegex', ''));
-	$excludefilter      = array_filter(
-		array_map('trim', array_merge($excludefilterBase, $excludefilterParam))
-	);
-	$excludeBase        = array('.svn', '.git', '.gitignore', 'CVS', '.DS_Store', '__MACOSX');
-	$excludeParam       = explode(',', $input->getString('exclude', ''));
-	$exclude            = array_filter(
-		array_map('trim', array_merge($excludeBase, $excludeParam))
-	);
-	$extLower           = explode(',', strtolower($input->getString('ext', 'pdf,png,jpg,jpeg')));
-	$extUpper           = explode(',', strtoupper($input->getString('ext', 'pdf,png,jpg,jpeg')));
-	$ext                = array_filter(
-		array_map('trim', array_merge($extLower, $extUpper))
-	);
-	$debug              = $input->getString('debug', '');
-	$extensions         = '\.' . implode('|\.', $ext);
-	$relativeFolder     = trim(
-		str_replace('\\', '/', $input->getPath('folder', 'images')),
-		'\\/'
-	);
-	$folder             = JPATH_ROOT . '/' . $relativeFolder;
-
-	if (!is_dir($folder))
-	{
-		die('<h4>Der Ordnerpfad ' . $relativeFolder . ' existiert nicht</h4>');
-	}
-
-	$files = Folder::files($folder, $extensions, $subfolder, true, $exclude, $excludefilter);
-
-	echo '<h2>Verwendete Parameter</h2>';
-
-	if ($rename === true)
-	{
-		echo '- rename=1<br />';
-	}
-
-	if ($delete === true)
-	{
-		echo '- delete=1<br />';
-	}
-
-	if ($all === true)
-	{
-		if ($delete === true)
-		{
-			$all = false;
-			echo '<span style="color:#999">- all=1</span><br />';
-		}
-		else
-		{
-			echo '- all=1<br />';
-		}
-	}
-
-	if ($path === true)
-	{
-		if ($delete === true)
-		{
-			echo '<span style="color:#999">- path=1</span><br />';
-		}
-		else
-		{
-			echo '- path=1<br />';
-		}
-	}
-
-	if ($seo === true)
-	{
-		echo '- seo=1<br />';
-
-	}
-
-	if (!empty($input->getString('folder')))
-	{
-		echo '- folder=' . $input->getPath('folder') . '<br />';
-	}
-
-	if (!empty($input->getBool('subfolder')))
-	{
-		echo '- subfolder=1<br />';
-	}
-
-	if (!empty($input->getBool('emptyFolder')))
-	{
-		echo '- emptyFolder=1<br />';
-	}
-
-	if (!empty($input->getString('ext')))
-	{
-		echo '- ext=' . $input->getString('ext') . '<br />';
-	}
-
-	if (!empty($input->getString('exclude')))
-	{
-		echo '- exclude=' . $input->getString('exclude') . '<br />';
-	}
-
-	if (!empty($input->getCmd('excludeRegex')))
-	{
-		echo '- exclude=' . $input->getCmd('excludeRegex') . '<br />';
-	}
-
-	if (!empty($input->getString('debug')))
-	{
-		echo '- debug=' . $input->getString('debug') . '<br />';
-	}
-
-	echo '<br /><br />';
-
-	if ($subfolder === true)
-	{
-		$recursiv = ' (inkl. Unterverzeichnisse)';
-	}
-	else
-	{
-		$recursiv = ' (ohne Unterverzeichnisse)';
-	}
-
-	echo '<h2>Suche Dateien mit der Endung: .' . implode(', .', $ext) . '<br />in ' . $folder . $recursiv . '<h2> ';
-
-	$arrFiles = [];
-	$x        = 0;
-
-	foreach ($files as $file)
-	{
-		ob_flush();
-		flush();
-
-		$x++;
-		$fileParts = pathinfo($file);
-		$toExclude = false;
-		$toIgnore  = false;
-
-		if (!empty($fileParts['extension']) && !in_array($fileParts['extension'], $ext) || empty($fileParts['filename']))
-		{
-			continue;
-		}
-
-		$newName = stringMakeSafe($fileParts['filename'], $seo) . '.' . strtolower($fileParts['extension']);
-
-		$source = ltrim(str_replace(JPATH_ROOT, '', $file), '\\/');
-		$source = str_replace('\\', '/', $source);
-
-		$relativePath     = str_replace($fileParts['basename'], '', $source);
-		$relativePathSafe = pathMakeSafe($relativePath, $seo);
-
-		$destination = str_replace('\\', '/', $relativePath) . $newName;
-
-		if ($delete === false && $path === true)
-		{
-			$destination = str_replace('\\', '/', $relativePathSafe) . $newName;
-		}
-
-		$arrFile = array(
-			'src'      => $source,
-			'dest'     => $destination,
-			'delete'   => $delete,
-			'rename'   => false,
-			'exists'   => false,
-			'tabellen' => [],
-		);
-
-		if ((file_exists_cs(JPATH_ROOT . '/' . $destination) && $rename === true)
-			|| array_key_exists($destination, $arrFiles))
-		{
-			$arrFile['exists'] = true;
-		}
-
-		if ($source != $destination)
-		{
-			if ($arrFile['exists'] === true)
-			{
-				$output['toExclude'][] = $source . ' -> <span style="color: red;">' . $destination . '</span>';
-
-				if ($delete === true)
-				{
-					$toIgnore = true;
-				}
-
-				if ($delete === false)
-				{
-					continue;
-				}
-			}
-		}
-
-		if ($source == $destination)
-		{
-			$output['toIgnore'][] = '<span style="color: darkgreen;">' . $source . '</span>';
-
-			if ($delete === false)
-			{
-				continue;
-			}
-
-			$toIgnore = true;
-		}
-
-		$arrFiles[$destination] = $arrFile;
-
-		if ($toIgnore === false)
-		{
-			$output['toSearch'][] = $source . ' -> <span style="color: darkgreen;">' . $destination . '</span>';
-		}
-
-		if ($x % 60 === 0)
-		{
-			echo '.';
-		}
-	}
-
-	echo '<br />';
-
-	if ($x === 0 && $emptyFolder === false)
-	{
-		die('<h3>Keine Dateien gefunden.</h3>');
-	}
-
-	if ($x > 0)
-	{
-		echo '<h3>Es wurde/n insgesamt ' . $x . ' Datei/en gefunden.</h3>';
-		echo '<br />';
-	}
-
-	if (!empty($output['toExclude']) && $delete === true)
-	{
-		$output['toIgnore'] = array_merge($output['toIgnore'], $output['toExclude']);
-		unset($output['toExclude']);
-	}
-
-	$countIgnore = !empty($output['toIgnore']) ? (int) count($output['toIgnore']) : 0;
-
-	if ($countIgnore > 0)
-	{
-		echo '<h3>Davon ';
-
-		if ($delete === true)
-		{
-			echo 'in der Datenbank zur Löschung gesucht, aber ';
-		}
-
-		echo 'nicht umbenannt, weil schon URL-Safe: ' . $countIgnore . ' Datei/en</h3>';
-		echo implode('<br />', $output['toIgnore']);
-		echo '<br /><br />';
-	}
-
-	ob_flush();
-	flush();
-
-	$countExclude = !empty($output['toExclude']) ? (int) count($output['toExclude']) : 0;
-
-	if ($countExclude > 0)
-	{
-		echo '<h3>Davon ausgeschlossen, weil die Zieldatei vorhandenem ist: ' . $countExclude . ' Datei/en</h3>';
-		$output['toExclude'] = implode("\n", $output['toExclude']);
-		@file_put_contents(SCRIPT_BASE . '/'. $date . '_filesExcluded.txt', $output['toExclude']);
-		echo nl2br($output['toExclude']);
-		echo '<br /><br />';
-	}
-
-	ob_flush();
-	flush();
-
-	$countSearch   = !empty($output['toSearch']) ? (int) count($output['toSearch']) : 0;
-	$countArrFiles = !empty($arrFiles) ? (int) count($arrFiles) : 0;
-
-	if ($countArrFiles > 0 && $countSearch === 0)
-	{
-		echo '<h3>Alle Dateien werden in der Datenbank zur ';
-
-		if ($rename === true)
-		{
-			echo 'Umbenennung';
-		}
-
-		if ($rename === true && $delete === true)
-		{
-			echo '/';
-		}
-
-		if ($delete === true)
-		{
-			echo 'Löschung';
-		}
-
-		echo ' gesucht</h3>';
-	}
-	else if ($countArrFiles === 0 && $countSearch === 0)
-	{
-		echo '<h3>Keine Dateien zum Verarbeiten übrig.</h3>';
-
-		if ($emptyFolder === false)
-		{
-			die;
-		}
-	}
-
-
-	if ($countSearch > 0)
-	{
-		echo '<h3>Der Rest (' . $countSearch . ' Datei/en) wird, wie folgt, in der Datenbank zur ';
-
-		if ($rename === true)
-		{
-			echo 'Umbenennung ';
-		}
-
-		if ($rename === true && $delete === true)
-		{
-			echo '/ ';
-		}
-
-		if ($delete === true)
-		{
-			echo 'Löschung ';
-		}
-
-		echo 'gesucht</h3>';
-		echo implode('<br />', $output['toSearch']);
-	}
-
-	echo '<h4>' . Profiler::getInstance('Tidyup my files')->mark('Dateisuche in ' . $relativeFolder) . '</h4>';
-	echo '<br /><br />';
-
-	ob_flush();
-	flush();
-
-	unset($files, $file, $arrFile, $fileParts, $output, $newName, $source, $destination, $relativePath, $relativePathSafe);
-
-	//die;
-
-	ob_flush();
-	flush();
-
-	$db        = Factory::getDbo();
-	$arrTables = $db->getTableList();
-	//	$tblQueries = [];
-	$sql = [];
-
-	// file_put_contents(JPATH_ROOT . '/cli/tabellen.txt', implode("\n", $arrTables));
-	// die;
-
-	if (!empty($arrFiles))
-	{
-		echo '<h2>Starte Suche nach Datein in der Datenbank ....</h2>';
-
-		foreach ($arrTables as $strTable)
-		{
-			$hits                = [];
-			$search              = 1;
-			$strTblWithoutPrefix = str_replace($db->getPrefix(), '', $strTable);
-
-			if (in_array($strTblWithoutPrefix, _EXCLUDE_TABLES))
-			{
-				continue;
-			}
-
-			$tblColumns        = $db->getTableColumns($strTable);
-			$arrAllowedColumns = [];
-
-			foreach ($tblColumns as $column => $type)
-			{
-				if (in_array($type, array('varchar', 'text', 'mediumtext', 'longtext', 'tinytext')))
-				{
-					$arrAllowedColumns[] = $column;
-				}
-			}
-
-			unset($column, $type);
-
-			if (empty($arrAllowedColumns))
-			{
-				continue;
-			}
-
-			$query = $db->getQuery(true);
-
-			$query->select('*')
-				->from($db->qn($strTable));
-			$db->setQuery($query);
-			$tblRows = $db->loadAssocList();
-
-			echo 'Durchsuche <strong>' . $strTable . '</strong> mit <strong>' . count($tblRows) . '</strong> Datensätzen ...';
-
-			ob_flush();
-			flush();
-
-			$teiler = (count($tblRows) / 80);
-			$teiler = $teiler < 1 ? 1 : $teiler;
-
-			foreach ($tblRows as $tblRow)
-			{
-				if ($search % $teiler === 0)
-				{
-					echo '.';
-
-					ob_flush();
-					flush();
-				}
-
-				$search++;
-
-				foreach ($tblRow as $column => $value)
-				{
-					if (!in_array($column, $arrAllowedColumns) || empty($value))
-					{
-						continue;
-					}
-
-					$valSerialized = false;
-					$valJson       = false;
-					$tmp           = @json_decode($value);
-
-					if ($tmp !== null)
-					{
-						$valJson = true;
-						$value   = $tmp;
-					}
-
-					if ($valJson === false)
-					{
-						$tmp = @unserialize($value);
-
-						if ($tmp !== false)
-						{
-							$valSerialized = true;
-							$value         = $tmp;
-						}
-					}
-
-					$dbChanged = false;
-
-					foreach ($arrFiles as $fileKey => $fileParams)
-					{
-						$valChanged = false;
-						$fileSrc    = $fileParams['src'];
-						$fileDest   = $fileParams['dest'];
-
-						if (in_array($strTblWithoutPrefix, _ONLY_FILENAMES) || $path === false)
-						{
-							$fileSrc  = basename($fileParams['src']);
-							$fileDest = basename($fileParams['dest']);
-						}
-
-						if (is_object($value))
-						{
-							$value = get_object_vars($value);
-						}
-
-						if (findFileInData($fileSrc, $value) === true)
-						{
-							$hits[] = $fileSrc;
-							$hits   = ArrayHelper::arrayUnique($hits);
-
-							$arrFiles[$fileKey]['delete']                = false;
-							$arrFiles[$fileKey]['tabellen'][$strTable][] = $column;
-							$arrFiles[$fileKey]['tabellen'][$strTable]   = ArrayHelper::arrayUnique($arrFiles[$fileKey]['tabellen'][$strTable]);
-
-							if ($fileParams['exists'] === false && $rename === true && $fileSrc != $fileDest)
-							{
-								$valChanged = replaceInData($value, $fileSrc, $fileDest);
-							}
-						}
-
-						if ($valChanged !== false)
-						{
-							$value                        = $valChanged;
-							$arrFiles[$fileKey]['rename'] = true;
-							$dbChanged                    = true;
-						}
-
-						if ($fileParams['exists'] === false && $valChanged === false && $all === true)
-						{
-							if ($arrFiles[$fileKey]['delete'] === false && $fileSrc != $fileDest)
-							{
-								$arrFiles[$fileKey]['rename'] = true;
-							}
-						}
-					}
-
-					if ($dbChanged === false)
-					{
-						continue;
-					}
-
-					$valChanged = $value;
-					$value      = $tblRow[$column];
-
-					if ($valSerialized)
-					{
-						$valChanged = serialize($valChanged);
-					}
-
-					if ($valJson)
-					{
-						$valChanged = json_encode($valChanged);
-					}
-
-					if ($rename === true)
-					{
-						$tableQuery = $db->getQuery(true);
-
-						$tableQuery->update($db->qn($strTable))
-							->set($db->qn($column) . '=' . $db->q($valChanged))
-							->where($db->qn($column) . '=' . $db->q($value));
-
-						//$tblQueries[$strTable][] = htmlspecialchars((string) $tableQuery);
-						$sql[] = (string) $tableQuery;
-					}
-				}
-			}
-
-			$countHits  = (int) count($hits);
-			$hitsOutput = $countHits > 0 ? '<br />(' . implode(', ', $hits) . ')' : '';
-
-			echo $hitsOutput . '<br /><strong>' . Profiler::getInstance('Tidyup my files')->mark('Datenbanksuche in ' . $strTable . ' und ' . count($tblRows) . ' Datensätzen') . '</strong> ergab <strong>' . $countHits . ' Treffer</strong><br /><br />';
-
-			ob_flush();
-			flush();
-		}
-	}
-
-	echo '<br />';
-
-	if (!empty($sql))
-	{
-		$sql   = ArrayHelper::arrayUnique($sql);
-		$query = implode(';', $sql);
-
-		@file_put_contents(SCRIPT_BASE . '/' . $date . '_datenbank.sql', $query);
-
-		if ($debug === 'off')
-		{
-			echo '<h3>Führe Datenbank-Queries aus ...</h3>';
-
-			ob_flush();
-			flush();
-
-			$config = Factory::getConfig();
-			$mysql  = shell_exec("mysql --user=" . $config->get('user')
-				. " --password=" . $config->get('password')
-				. " --host=" . $config->get('host')
-				. " " . $config->get('db')
-				. " < " . SCRIPT_BASE . "/datenbank.sql"
-			);
-
-			if (!empty($mysql))
-			{
-				print_r($mysql);
-				die;
-			}
-
-			unset($query);
-		}
-	}
-
-	$output      = [];
-	$fToDelete   = [];
-	$filesCopied = [];
-	$x           = 0;
-
-	foreach ($arrFiles as $file)
-	{
-		if (++$x % 60 === 0)
-		{
-			echo '.';
-
-			ob_flush();
-			flush();
-		}
-
-		$destFile = $file['dest'];
-
-		if ($file['delete'] === true)
-		{
-			$destFile = 'tidyup_myfiles/to_delete/' . $file['src'];
-
-			$output['delete'][] = 'Datei <strong>' . $file['src'] . '</strong> verschoben nach <strong>' . $destFile . '</strong>.<br />';
-		}
-
-		if ($file['rename'] === true)
-		{
-			$output['rename'][] = 'Die Datei <strong>' . $file['src'] . '</strong> wurde';
-
-			if (empty($file['tabellen']))
-			{
-				$output['rename'][] = ' zwar in keiner Tabelle gefunden, aber trotzdem für die Zukunft';
-			}
-			else
-			{
-				$output['rename'][] = ' in den Tabellen<strong>';
-
-				foreach ($file['tabellen'] as $tblName => $tblColumns)
-				{
-					$output['rename'][] = ' ' . $tblName . ' (' . implode(', ', $tblColumns) . ')';
-				}
-
-				$output['rename'][] = '</strong> gefunden und';
-			}
-
-			$output['rename'][] = ' in <strong>' . $destFile . '</strong> umbenannt.<br />';
-		}
-
-		if (!empty($sql))
-		{
-			$output['table'][] = '<h4>Es wurden <strong>' . count($sql) . '</strong> SQL-Queries ausgeführt:</h4>';
-			unset($sql);
-
-		}
-
-		if ($debug === 'off' && ($file['rename'] === true || $file['delete'] === true))
-		{
-			// If the destination directory doesn't exist we need to create it
-			if (!file_exists_cs(dirname(JPATH_ROOT . '/' . $destFile)))
-			{
-				Folder::create(dirname(JPATH_ROOT . '/' . $destFile));
-			}
-
-			if (File::copy(JPATH_ROOT . '/' . $file['src'], JPATH_ROOT . '/' . $destFile) === true)
-			{
-				$fToDelete[]   = JPATH_ROOT. '/' . $file['src'];
-				$filesCopied[] = $file['src'] . ' -> ' . $destFile;
-			}
-		}
-	}
-
-	if (!empty($filesCopied))
-	{
-		@file_put_contents(SCRIPT_BASE . '/' . $date . '_filesCopied.txt', implode("\n", $filesCopied));
-	}
-
-	if ($debug === 'off' && !empty($fToDelete))
-	{
-		$fToDelete = ArrayHelper::arrayUnique($fToDelete);
-
-		File::delete($fToDelete);
-	}
-
-	if ($rename === true)
-	{
-		echo '<h2 style="color: darkgreen;">Umbenannte Dateien</h2>';
-
-		if (!empty($output['rename']))
-		{
-			echo '<div style="color: darkgreen;">' . implode('', $output['rename']) . '</div>';
-		}
-		else
-		{
-			echo '<div style="color: darkgreen;">Es mussten keine Dateien umbenannt werden.</div>';
-		}
-
-		echo '<br /><br />';
-
-		echo '<h2 style="color: darkgreen;">Bearbeitete Tabellen</h2>';
-
-		if (!empty($output['table']))
-		{
-			echo '<div style="color: darkgreen;">' . implode('', $output['table']) . '</div>';
-		}
-		else
-		{
-			echo '<div style="color: darkgreen;">Es mussten keine Tabelle bearbeitet werden.</div>';
-		}
-
-		echo '<br /><br />';
-	}
-
-	if ($delete === true || $emptyFolder === true)
-	{
-		echo '<h2 style="color: orange;">Löschung</h2>';
-
-		if (!empty($output['delete']))
-		{
-			echo '<h3 style="color: orange;">' . count($output['delete']) . ' zur Löschung vorgeschlage Dateien, die nicht in der Datenbank verwendet werden</h3>';
-			echo '<div style="color: orange;">' . implode('', $output['delete']) . '</div>';
-		}
-		else
-		{
-			echo '<h3 style="color: darkgreen;">Keine Dateien zum Löschen gefunden.</h3>';
-		}
-
-		if ($emptyFolder === true)
-		{
-			echo '<br /><br />';
-			echo '<h3>Bereinige leere Verzeichnisse</h3><br />';
-
-//			@ini_set('xdebug.max_nesting_level', 200);
-			removeEmptyDirs($folder, $subfolder, $debug);
-		}
-
-		echo '<br /><br />';
-	}
-
-	if ($debug !== 'off')
-	{
-		echo '<h1>Debug Modus aktiv, nix passiert :-)</h1>';
-		echo '<br /><br /><br />';
-	}
-	?>
+            <?php die;
+        }
+    }
+
+    $excludefilterBase  = array('^\..*');
+    $excludefilterParam = explode(',', $input->getCmd('excludeRegex', ''));
+    $excludefilter      = array_filter(
+        array_map('trim', array_merge($excludefilterBase, $excludefilterParam))
+    );
+    $excludeBase        = array('.svn', '.git', '.gitignore', 'CVS', '.DS_Store', '__MACOSX');
+    $excludeParam       = explode(',', $input->getString('exclude', ''));
+    $exclude            = array_filter(
+        array_map('trim', array_merge($excludeBase, $excludeParam))
+    );
+    $extLower           = explode(',', strtolower($input->getString('ext', 'pdf,png,jpg,jpeg')));
+    $extUpper           = explode(',', strtoupper($input->getString('ext', 'pdf,png,jpg,jpeg')));
+    $ext                = array_filter(
+        array_map('trim', array_merge($extLower, $extUpper))
+    );
+    $debug              = $input->getString('debug', '');
+    $extensions         = '\.' . implode('|\.', $ext);
+    $relativeFolder     = trim(
+        str_replace('\\', '/', $input->getPath('folder', 'images')),
+        '\\/'
+    );
+    $folder             = JPATH_ROOT . '/' . $relativeFolder;
+
+    if (!is_dir($folder)) {
+        die('<h4>Der Ordnerpfad ' . $relativeFolder . ' existiert nicht</h4>');
+    }
+
+    $files = Folder::files($folder, $extensions, $subfolder, true, $exclude, $excludefilter);
+
+    echo '<h2>Verwendete Parameter</h2>';
+
+    if ($rename === true) {
+        echo '- rename=1<br />';
+    }
+
+    if ($delete === true) {
+        echo '- delete=1<br />';
+    }
+
+    if ($all === true) {
+        if ($delete === true) {
+            $all = false;
+            echo '<span style="color:#999">- all=1</span><br />';
+        } else {
+            echo '- all=1<br />';
+        }
+    }
+
+    if ($path === true) {
+        if ($delete === true) {
+            echo '<span style="color:#999">- path=1</span><br />';
+        } else {
+            echo '- path=1<br />';
+        }
+    }
+
+    if ($seo === true) {
+        echo '- seo=1<br />';
+    }
+
+    if (!empty($input->getString('folder'))) {
+        echo '- folder=' . $input->getPath('folder') . '<br />';
+    }
+
+    if (!empty($input->getBool('subfolder'))) {
+        echo '- subfolder=1<br />';
+    }
+
+    if (!empty($input->getBool('emptyFolder'))) {
+        echo '- emptyFolder=1<br />';
+    }
+
+    if (!empty($input->getString('ext'))) {
+        echo '- ext=' . $input->getString('ext') . '<br />';
+    }
+
+    if (!empty($input->getString('exclude'))) {
+        echo '- exclude=' . $input->getString('exclude') . '<br />';
+    }
+
+    if (!empty($input->getCmd('excludeRegex'))) {
+        echo '- exclude=' . $input->getCmd('excludeRegex') . '<br />';
+    }
+
+    if (!empty($input->getString('debug'))) {
+        echo '- debug=' . $input->getString('debug') . '<br />';
+    }
+
+    echo '<br /><br />';
+
+    if ($subfolder === true) {
+        $recursiv = ' (inkl. Unterverzeichnisse)';
+    } else {
+        $recursiv = ' (ohne Unterverzeichnisse)';
+    }
+
+    echo '<h2>Suche Dateien mit der Endung: .' . implode(', .', $ext) . '<br />in ' . $folder . $recursiv . '<h2> ';
+
+    $arrFiles = [];
+    $x        = 0;
+
+    foreach ($files as $file) {
+        ob_flush();
+        flush();
+
+        $x++;
+        $fileParts = pathinfo($file);
+        $toExclude = false;
+        $toIgnore  = false;
+
+        if (!empty($fileParts['extension']) && !in_array($fileParts['extension'], $ext) || empty($fileParts['filename'])) {
+            continue;
+        }
+
+        $newName = stringMakeSafe($fileParts['filename'], $seo) . '.' . strtolower($fileParts['extension']);
+
+        $source = ltrim(str_replace(JPATH_ROOT, '', $file), '\\/');
+        $source = str_replace('\\', '/', $source);
+
+        $relativePath     = str_replace($fileParts['basename'], '', $source);
+        $relativePathSafe = pathMakeSafe($relativePath, $seo);
+
+        $destination = str_replace('\\', '/', $relativePath) . $newName;
+
+        if ($delete === false && $path === true) {
+            $destination = str_replace('\\', '/', $relativePathSafe) . $newName;
+        }
+
+        $arrFile = array(
+            'src'      => $source,
+            'dest'     => $destination,
+            'delete'   => $delete,
+            'rename'   => false,
+            'exists'   => false,
+            'tabellen' => [],
+        );
+
+        if ((file_exists_cs(JPATH_ROOT . '/' . $destination) && $rename === true)
+            || array_key_exists($destination, $arrFiles)
+        ) {
+            $arrFile['exists'] = true;
+        }
+
+        if ($source != $destination) {
+            if ($arrFile['exists'] === true) {
+                $output['toExclude'][] = $source . ' -> <span style="color: red;">' . $destination . '</span>';
+
+                if ($delete === true) {
+                    $toIgnore = true;
+                }
+
+                if ($delete === false) {
+                    continue;
+                }
+            }
+        }
+
+        if ($source == $destination) {
+            $output['toIgnore'][] = '<span style="color: darkgreen;">' . $source . '</span>';
+
+            if ($delete === false) {
+                continue;
+            }
+
+            $toIgnore = true;
+        }
+
+        $arrFiles[$destination] = $arrFile;
+
+        if ($toIgnore === false) {
+            $output['toSearch'][] = $source . ' -> <span style="color: darkgreen;">' . $destination . '</span>';
+        }
+
+        if ($x % 60 === 0) {
+            echo '.';
+        }
+    }
+
+    echo '<br />';
+
+    if ($x === 0 && $emptyFolder === false) {
+        die('<h3>Keine Dateien gefunden.</h3>');
+    }
+
+    if ($x > 0) {
+        echo '<h3>Es wurde/n insgesamt ' . $x . ' Datei/en gefunden.</h3>';
+        echo '<br />';
+    }
+
+    if (!empty($output['toExclude']) && $delete === true) {
+        $output['toIgnore'] = array_merge($output['toIgnore'], $output['toExclude']);
+        unset($output['toExclude']);
+    }
+
+    $countIgnore = !empty($output['toIgnore']) ? (int) count($output['toIgnore']) : 0;
+
+    if ($countIgnore > 0) {
+        echo '<h3>Davon ';
+
+        if ($delete === true) {
+            echo 'in der Datenbank zur Löschung gesucht, aber ';
+        }
+
+        echo 'nicht umbenannt, weil schon URL-Safe: ' . $countIgnore . ' Datei/en</h3>';
+        echo implode('<br />', $output['toIgnore']);
+        echo '<br /><br />';
+    }
+
+    ob_flush();
+    flush();
+
+    $countExclude = !empty($output['toExclude']) ? (int) count($output['toExclude']) : 0;
+
+    if ($countExclude > 0) {
+        echo '<h3>Davon ausgeschlossen, weil die Zieldatei vorhandenem ist: ' . $countExclude . ' Datei/en</h3>';
+        $output['toExclude'] = implode("\n", $output['toExclude']);
+        @file_put_contents(SCRIPT_BASE . '/' . $date . '_filesExcluded.txt', $output['toExclude']);
+        echo nl2br($output['toExclude']);
+        echo '<br /><br />';
+    }
+
+    ob_flush();
+    flush();
+
+    $countSearch   = !empty($output['toSearch']) ? (int) count($output['toSearch']) : 0;
+    $countArrFiles = !empty($arrFiles) ? (int) count($arrFiles) : 0;
+
+    if ($countArrFiles > 0 && $countSearch === 0) {
+        echo '<h3>Alle Dateien werden in der Datenbank zur ';
+
+        if ($rename === true) {
+            echo 'Umbenennung';
+        }
+
+        if ($rename === true && $delete === true) {
+            echo '/';
+        }
+
+        if ($delete === true) {
+            echo 'Löschung';
+        }
+
+        echo ' gesucht</h3>';
+    } else {
+        if ($countArrFiles === 0 && $countSearch === 0) {
+            echo '<h3>Keine Dateien zum Verarbeiten übrig.</h3>';
+
+            if ($emptyFolder === false) {
+                die;
+            }
+        }
+    }
+
+    if ($countSearch > 0) {
+        echo '<h3>Der Rest (' . $countSearch . ' Datei/en) wird, wie folgt, in der Datenbank zur ';
+
+        if ($rename === true) {
+            echo 'Umbenennung ';
+        }
+
+        if ($rename === true && $delete === true) {
+            echo '/ ';
+        }
+
+        if ($delete === true) {
+            echo 'Löschung ';
+        }
+
+        echo 'gesucht</h3>';
+        echo implode('<br />', $output['toSearch']);
+    }
+
+    echo '<h4>' . Profiler::getInstance('Tidyup my files')->mark('Dateisuche in ' . $relativeFolder) . '</h4>';
+    echo '<br /><br />';
+
+    ob_flush();
+    flush();
+
+    unset($files, $file, $arrFile, $fileParts, $output, $newName, $source, $destination, $relativePath, $relativePathSafe);
+
+    //die;
+
+    ob_flush();
+    flush();
+
+    $db        = Factory::getDbo();
+    $arrTables = $db->getTableList();
+    //	$tblQueries = [];
+    $sql = [];
+
+    // file_put_contents(JPATH_ROOT . '/cli/tabellen.txt', implode("\n", $arrTables));
+    // die;
+
+    if (!empty($arrFiles)) {
+        echo '<h2>Starte Suche nach Datein in der Datenbank ....</h2>';
+
+        foreach ($arrTables as $strTable) {
+            $hits                = [];
+            $search              = 1;
+            $strTblWithoutPrefix = str_replace($db->getPrefix(), '', $strTable);
+
+            if (in_array($strTblWithoutPrefix, _EXCLUDE_TABLES)) {
+                continue;
+            }
+
+            $tblColumns        = $db->getTableColumns($strTable);
+            $arrAllowedColumns = [];
+
+            foreach ($tblColumns as $column => $type) {
+                if (in_array($type, array('varchar', 'text', 'mediumtext', 'longtext', 'tinytext'))) {
+                    $arrAllowedColumns[] = $column;
+                }
+            }
+
+            unset($column, $type);
+
+            if (empty($arrAllowedColumns)) {
+                continue;
+            }
+
+            $query = $db->getQuery(true);
+
+            $query->select('*')
+                ->from($db->qn($strTable));
+            $db->setQuery($query);
+            $tblRows = $db->loadAssocList();
+
+            echo 'Durchsuche <strong>' . $strTable . '</strong> mit <strong>' . count($tblRows) . '</strong> Datensätzen ...';
+
+            ob_flush();
+            flush();
+
+            $teiler = (count($tblRows) / 80);
+            $teiler = $teiler < 1 ? 1 : $teiler;
+
+            foreach ($tblRows as $tblRow) {
+                if ($search % $teiler === 0) {
+                    echo '.';
+
+                    ob_flush();
+                    flush();
+                }
+
+                $search++;
+
+                foreach ($tblRow as $column => $value) {
+                    if (!in_array($column, $arrAllowedColumns) || empty($value)) {
+                        continue;
+                    }
+
+                    $valSerialized = false;
+                    $valJson       = false;
+                    $tmp           = @json_decode($value);
+
+                    if ($tmp !== null) {
+                        $valJson = true;
+                        $value   = $tmp;
+                    }
+
+                    if ($valJson === false) {
+                        $tmp = @unserialize($value);
+
+                        if ($tmp !== false) {
+                            $valSerialized = true;
+                            $value         = $tmp;
+                        }
+                    }
+
+                    $dbChanged = false;
+
+                    foreach ($arrFiles as $fileKey => $fileParams) {
+                        $valChanged = false;
+                        $fileSrc    = $fileParams['src'];
+                        $fileDest   = $fileParams['dest'];
+
+                        if (in_array($strTblWithoutPrefix, _ONLY_FILENAMES) || $path === false) {
+                            $fileSrc  = basename($fileParams['src']);
+                            $fileDest = basename($fileParams['dest']);
+                        }
+
+                        if (is_object($value)) {
+                            $value = get_object_vars($value);
+                        }
+
+                        if (findFileInData($fileSrc, $value) === true) {
+                            $hits[] = $fileSrc;
+                            $hits   = ArrayHelper::arrayUnique($hits);
+
+                            $arrFiles[$fileKey]['delete']                = false;
+                            $arrFiles[$fileKey]['tabellen'][$strTable][] = $column;
+                            $arrFiles[$fileKey]['tabellen'][$strTable]   = ArrayHelper::arrayUnique($arrFiles[$fileKey]['tabellen'][$strTable]);
+
+                            if ($fileParams['exists'] === false && $rename === true && $fileSrc != $fileDest) {
+                                $valChanged = replaceInData($value, $fileSrc, $fileDest);
+                            }
+                        }
+
+                        if ($valChanged !== false) {
+                            $value                        = $valChanged;
+                            $arrFiles[$fileKey]['rename'] = true;
+                            $dbChanged                    = true;
+                        }
+
+                        if ($fileParams['exists'] === false && $valChanged === false && $all === true) {
+                            if ($arrFiles[$fileKey]['delete'] === false && $fileSrc != $fileDest) {
+                                $arrFiles[$fileKey]['rename'] = true;
+                            }
+                        }
+                    }
+
+                    if ($dbChanged === false) {
+                        continue;
+                    }
+
+                    $valChanged = $value;
+                    $value      = $tblRow[$column];
+
+                    if ($valSerialized) {
+                        $valChanged = serialize($valChanged);
+                    }
+
+                    if ($valJson) {
+                        $valChanged = json_encode($valChanged);
+                    }
+
+                    if ($rename === true) {
+                        $tableQuery = $db->getQuery(true);
+
+                        $tableQuery->update($db->qn($strTable))
+                            ->set($db->qn($column) . '=' . $db->q($valChanged))
+                            ->where($db->qn($column) . '=' . $db->q($value));
+
+                        //$tblQueries[$strTable][] = htmlspecialchars((string) $tableQuery);
+                        $sql[] = (string) $tableQuery;
+                    }
+                }
+            }
+
+            $countHits  = (int) count($hits);
+            $hitsOutput = $countHits > 0 ? '<br />(' . implode(', ', $hits) . ')' : '';
+
+            echo $hitsOutput . '<br /><strong>' . Profiler::getInstance('Tidyup my files')->mark('Datenbanksuche in ' . $strTable . ' und ' . count($tblRows) . ' Datensätzen') . '</strong> ergab <strong>' . $countHits . ' Treffer</strong><br /><br />';
+
+            ob_flush();
+            flush();
+        }
+    }
+
+    echo '<br />';
+
+    if (!empty($sql)) {
+        $sql   = ArrayHelper::arrayUnique($sql);
+        $query = implode(';', $sql);
+
+        @file_put_contents(SCRIPT_BASE . '/' . $date . '_datenbank.sql', $query);
+
+        if ($debug === 'off') {
+            echo '<h3>Führe Datenbank-Queries aus ...</h3>';
+
+            ob_flush();
+            flush();
+
+            $config = Factory::getConfig();
+            $mysql  = shell_exec("mysql --user=" . $config->get('user')
+                                 . " --password=" . $config->get('password')
+                                 . " --host=" . $config->get('host')
+                                 . " " . $config->get('db')
+                                 . " < " . SCRIPT_BASE . "/datenbank.sql"
+            );
+
+            if (!empty($mysql)) {
+                print_r($mysql);
+                die;
+            }
+
+            unset($query);
+        }
+    }
+
+    $output      = [];
+    $fToDelete   = [];
+    $filesCopied = [];
+    $x           = 0;
+
+    foreach ($arrFiles as $file) {
+        if (++$x % 60 === 0) {
+            echo '.';
+
+            ob_flush();
+            flush();
+        }
+
+        $destFile = $file['dest'];
+
+        if ($file['delete'] === true) {
+            $destFile = 'tidyup_myfiles/to_delete/' . $file['src'];
+
+            $output['delete'][] = 'Datei <strong>' . $file['src'] . '</strong> verschoben nach <strong>' . $destFile . '</strong>.<br />';
+        }
+
+        if ($file['rename'] === true) {
+            $output['rename'][] = 'Die Datei <strong>' . $file['src'] . '</strong> wurde';
+
+            if (empty($file['tabellen'])) {
+                $output['rename'][] = ' zwar in keiner Tabelle gefunden, aber trotzdem für die Zukunft';
+            } else {
+                $output['rename'][] = ' in den Tabellen<strong>';
+
+                foreach ($file['tabellen'] as $tblName => $tblColumns) {
+                    $output['rename'][] = ' ' . $tblName . ' (' . implode(', ', $tblColumns) . ')';
+                }
+
+                $output['rename'][] = '</strong> gefunden und';
+            }
+
+            $output['rename'][] = ' in <strong>' . $destFile . '</strong> umbenannt.<br />';
+        }
+
+        if (!empty($sql)) {
+            $output['table'][] = '<h4>Es wurden <strong>' . count($sql) . '</strong> SQL-Queries ausgeführt:</h4>';
+            unset($sql);
+        }
+
+        if ($debug === 'off' && ($file['rename'] === true || $file['delete'] === true)) {
+            // If the destination directory doesn't exist we need to create it
+            if (!file_exists_cs(dirname(JPATH_ROOT . '/' . $destFile))) {
+                Folder::create(dirname(JPATH_ROOT . '/' . $destFile));
+            }
+
+            if (File::copy(JPATH_ROOT . '/' . $file['src'], JPATH_ROOT . '/' . $destFile) === true) {
+                $fToDelete[]   = JPATH_ROOT . '/' . $file['src'];
+                $filesCopied[] = $file['src'] . ' -> ' . $destFile;
+            }
+        }
+    }
+
+    if (!empty($filesCopied)) {
+        @file_put_contents(SCRIPT_BASE . '/' . $date . '_filesCopied.txt', implode("\n", $filesCopied));
+    }
+
+    if ($debug === 'off' && !empty($fToDelete)) {
+        $fToDelete = ArrayHelper::arrayUnique($fToDelete);
+
+        File::delete($fToDelete);
+    }
+
+    if ($rename === true) {
+        echo '<h2 style="color: darkgreen;">Umbenannte Dateien</h2>';
+
+        if (!empty($output['rename'])) {
+            echo '<div style="color: darkgreen;">' . implode('', $output['rename']) . '</div>';
+        } else {
+            echo '<div style="color: darkgreen;">Es mussten keine Dateien umbenannt werden.</div>';
+        }
+
+        echo '<br /><br />';
+
+        echo '<h2 style="color: darkgreen;">Bearbeitete Tabellen</h2>';
+
+        if (!empty($output['table'])) {
+            echo '<div style="color: darkgreen;">' . implode('', $output['table']) . '</div>';
+        } else {
+            echo '<div style="color: darkgreen;">Es mussten keine Tabelle bearbeitet werden.</div>';
+        }
+
+        echo '<br /><br />';
+    }
+
+    if ($delete === true || $emptyFolder === true) {
+        echo '<h2 style="color: orange;">Löschung</h2>';
+
+        if (!empty($output['delete'])) {
+            echo '<h3 style="color: orange;">' . count($output['delete']) . ' zur Löschung vorgeschlage Dateien, die nicht in der Datenbank verwendet werden</h3>';
+            echo '<div style="color: orange;">' . implode('', $output['delete']) . '</div>';
+        } else {
+            echo '<h3 style="color: darkgreen;">Keine Dateien zum Löschen gefunden.</h3>';
+        }
+
+        if ($emptyFolder === true) {
+            echo '<br /><br />';
+            echo '<h3>Bereinige leere Verzeichnisse</h3><br />';
+
+            //			@ini_set('xdebug.max_nesting_level', 200);
+            removeEmptyDirs($folder, $subfolder, $debug);
+        }
+
+        echo '<br /><br />';
+    }
+
+    if ($debug !== 'off') {
+        echo '<h1>Debug Modus aktiv, nix passiert :-)</h1>';
+        echo '<br /><br /><br />';
+    }
+    ?>
 
 	<br/>
 <h4><?php echo Profiler::getInstance('Tidyup my files')->mark('Ende der Verarbeitung'); ?></h4>
@@ -1114,297 +1004,265 @@ Profiler::getInstance('Tidyup my files')->setStart($startTime, $startMem); ?>
 
 function array_strpos($arrHaystack, $strNeedle)
 {
-	foreach ($arrHaystack as $v)
-	{
-		if (is_object($v))
-		{
-			$v = get_object_vars($v);
-		}
+    foreach ($arrHaystack as $v) {
+        if (is_object($v)) {
+            $v = get_object_vars($v);
+        }
 
-		if (is_array($v) && array_strpos($v, $strNeedle) || !is_array($v) && strpos($v, $strNeedle) !== false)
-		{
-			return true;
-		}
-	}
+        if (is_array($v) && array_strpos($v, $strNeedle) || !is_array($v) && strpos($v, $strNeedle) !== false) {
+            return true;
+        }
+    }
 
-	return false;
+    return false;
 }
 
 /**
- * @param   string $fileSrc
- * @param   mixed  $data
+ * @param   string  $fileSrc
+ * @param   mixed   $data
  *
  * @return   bool
  * @since    1.0.10
  */
 function findFileInData($fileSrc, $data)
 {
-	if (is_array($data))
-	{
-		foreach ($data as $v)
-		{
-			if (is_object($v))
-			{
-				$v = get_object_vars($v);
-			}
+    if (is_array($data)) {
+        foreach ($data as $v) {
+            if (is_object($v)) {
+                $v = get_object_vars($v);
+            }
 
-			if (is_array($v) && findFileInData($fileSrc, $v)
-				|| !is_array($v) && strpos($v, $fileSrc) !== false)
-			{
-				return true;
-			}
-		}
+            if (is_array($v) && findFileInData($fileSrc, $v)
+                || !is_array($v) && strpos($v, $fileSrc) !== false
+            ) {
+                return true;
+            }
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	if (strpos($data, $fileSrc) !== false)
-	{
-		return true;
-	}
+    if (strpos($data, $fileSrc) !== false) {
+        return true;
+    }
 
-	return false;
+    return false;
 }
 
 /**
- * @param   mixed  $v
- * @param   string $fileSrc
- * @param   string $fileDest
+ * @param   mixed   $v
+ * @param   string  $fileSrc
+ * @param   string  $fileDest
  *
  * @return   mixed
  * @since    1.0.10
  */
 function replaceInData($v, $fileSrc, $fileDest)
 {
-	if (is_array($v))
-	{
-		$w = array_str_replace($fileSrc, $fileDest, $v);
-	}
-	else
-	{
-		$w = str_replace($fileSrc, $fileDest, $v);
-	}
+    if (is_array($v)) {
+        $w = array_str_replace($fileSrc, $fileDest, $v);
+    } else {
+        $w = str_replace($fileSrc, $fileDest, $v);
+    }
 
-	return $w;
+    return $w;
 }
 
 /**
- * @param   string $strSearch
- * @param   string $strReplace
- * @param   array  $arrData
+ * @param   string  $strSearch
+ * @param   string  $strReplace
+ * @param   array   $arrData
  *
  * @return   array
  * @since    1.0.10
  */
 function array_str_replace($strSearch, $strReplace, $arrData)
 {
-	foreach ($arrData as $k => $v)
-	{
-		if (is_array($v))
-		{
-			$arrData[$k] = array_str_replace($strSearch, $strReplace, $v);
-		}
-		elseif (is_string($v))
-		{
-			$arrData[$k] = str_replace($strSearch, $strReplace, $v);
-		}
-	}
+    foreach ($arrData as $k => $v) {
+        if (is_array($v)) {
+            $arrData[$k] = array_str_replace($strSearch, $strReplace, $v);
+        } else if (is_string($v)) {
+            $arrData[$k] = str_replace($strSearch, $strReplace, $v);
+        }
+    }
 
-	return $arrData;
+    return $arrData;
 }
 
 /**
- * @param   string $file
+ * @param   string  $file
  *
  * @return   bool
  * @since    1.0.10
  */
 function file_exists_cs($file)
 {
-	if (!file_exists($file))
-	{
-		return false;
-	}
+    if (!file_exists($file)) {
+        return false;
+    }
 
-	$realFile = str_replace('\\', '/', realpath($file));
+    $realFile = str_replace('\\', '/', realpath($file));
 
-	if (strcmp($realFile, $file) == 0)
-	{
-		return true;
-	}
+    if (strcmp($realFile, $file) == 0) {
+        return true;
+    }
 
-	return false;
+    return false;
 }
 
 /**
- * @param   string $string
- * @param   bool   $seo
+ * @param   string  $string
+ * @param   bool    $seo
  *
  * @return   string
  * @since    1.0.10
  */
 function stringMakeSafe($string, $seo = false)
 {
-	if ($seo === true)
-	{
-		return Joomla\CMS\Filter\OutputFilter::stringURLSafe($string);
-	}
+    if ($seo === true) {
+        return Joomla\CMS\Filter\OutputFilter::stringURLSafe($string);
+    }
 
-	$string = str_replace(' ', '_', $string);
-	$string = Transliterate::utf8_latin_to_ascii($string);
+    $string = str_replace(' ', '_', $string);
+    $string = Transliterate::utf8_latin_to_ascii($string);
 
-	return File::makeSafe($string);
+    return File::makeSafe($string);
 }
 
 /**
- * @param   string $path
- * @param   bool   $seo
+ * @param   string  $path
+ * @param   bool    $seo
  *
  * @return   string
  * @since    1.0.10
  */
 function pathMakeSafe($path, $seo = false)
 {
-	if ($seo === true)
-	{
-		return pathMakeSeoSafe($path);
-	}
-	$path  = str_replace(' ', '_', $path);
-	$path  = Transliterate::utf8_latin_to_ascii($path);
-	$regex = array('#[^A-Za-z0-9_\\\/\(\)\[\]\{\}\#\$\^\+\.\'~`!@&=;,-]#');
+    if ($seo === true) {
+        return pathMakeSeoSafe($path);
+    }
+    $path  = str_replace(' ', '_', $path);
+    $path  = Transliterate::utf8_latin_to_ascii($path);
+    $regex = array('#[^A-Za-z0-9_\\\/\(\)\[\]\{\}\#\$\^\+\.\'~`!@&=;,-]#');
 
-	return preg_replace($regex, '', $path);
+    return preg_replace($regex, '', $path);
 }
 
 /**
- * @param   string $path
+ * @param   string  $path
  *
  * @return   string
  * @since    1.0.12
  */
 function pathMakeSeoSafe($path)
 {
-	$path = str_replace('-', ' ', $path);
-	$path = Transliterate::utf8_latin_to_ascii($path);
-	$path = trim(strtolower($path));
-	$path = preg_replace('/(\s|[^\/A-Za-z0-9\-])+/', '-', $path);
-	$path = trim($path, '-');
+    $path = str_replace('-', ' ', $path);
+    $path = Transliterate::utf8_latin_to_ascii($path);
+    $path = trim(strtolower($path));
+    $path = preg_replace('/(\s|[^\/A-Za-z0-9\-])+/', '-', $path);
+    $path = trim($path, '-');
 
-	return $path;
+    return $path;
 }
 
 /**
  * Suche nach neueren Versionen auf Github
  *
- * @param   bool $action
+ * @param   bool  $action
  *
  * @return   void
  * @sinse    1.0.14
  */
 function update($action)
 {
-	$update     = new stdClass;
-	$interval   = 1;
-	$date       = date('YmdHi');
-	$now        = new DateTime($date);
-	$updateFile = str_replace('\\', '/', SCRIPT_BASE . '/update.txt');
+    $update     = new stdClass;
+    $interval   = 1;
+    $date       = date('YmdHi');
+    $now        = new DateTime($date);
+    $updateFile = str_replace('\\', '/', SCRIPT_BASE . '/update.txt');
 
-	if (file_exists($updateFile))
-	{
-		if ($action === true)
-		{
-			@unlink($updateFile);
-		}
-		else
-		{
-			$update = json_decode(file_get_contents($updateFile));
-		}
-	}
+    if (file_exists($updateFile)) {
+        if ($action === true) {
+            @unlink($updateFile);
+        } else {
+            $update = json_decode(file_get_contents($updateFile));
+        }
+    }
 
-	if (!empty($update->date))
-	{
-		$intervalDate = new DateTime($update->date);
-		$interval     = date_diff($now, $intervalDate)->h;
-	}
+    if (!empty($update->date)) {
+        $intervalDate = new DateTime($update->date);
+        $interval     = date_diff($now, $intervalDate)->h;
+    }
 
+    if ($action === true || $interval > 0) {
+        @unlink($updateFile);
 
-	if ($action === true || $interval > 0)
-	{
-		@unlink($updateFile);
+        $repository = 'https://api.github.com/repos/joomtools/tidyup_myfiles/git/refs/tags';
 
-		$repository = 'https://api.github.com/repos/joomtools/tidyup_myfiles/git/refs/tags';
+        $http = HttpFactory::getHttp();
+        $http->setOption('userAgent', 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:56.0) Gecko/20100101 Firefox/56.0');
 
-		$http = HttpFactory::getHttp();
-		$http->setOption('userAgent', 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:56.0) Gecko/20100101 Firefox/56.0');
+        $data          = $http->get($repository);
+        $response      = json_decode($data->body);
+        $latest        = array_pop($response);
+        $latestVersion = str_replace('refs/tags/', '', $latest->ref);
 
-		$data          = $http->get($repository);
-		$response      = json_decode($data->body);
-		$latest        = array_pop($response);
-		$latestVersion = str_replace('refs/tags/', '', $latest->ref);
+        $update->date    = $date;
+        $update->version = $latestVersion;
+        $update->message = '';
 
-		$update->date    = $date;
-		$update->version = $latestVersion;
-		$update->message = '';
+        if ($data->code === 200) {
+            if (version_compare(_VERSION, $latestVersion, 'lt')) {
+                $downloadLink    = 'https://github.com/joomtools/tidyup_myfiles/archive/' . $latestVersion . '.zip';
+                $update->message .= '<p>';
+                $update->message .= '<strong style="color: darkgreen">Neue Version gefunden: ' . $latestVersion . '</strong><br />';
 
-		if ($data->code === 200)
-		{
-			if (version_compare(_VERSION, $latestVersion, 'lt'))
-			{
-				$downloadLink    = 'https://github.com/joomtools/tidyup_myfiles/archive/' . $latestVersion . '.zip';
-				$update->message .= '<p>';
-				$update->message .= '<strong style="color: darkgreen">Neue Version gefunden: ' . $latestVersion . '</strong><br />';
+                $tag = $http->get($latest->object->url);
+                $tag = json_decode($tag->body);
 
-				$tag = $http->get($latest->object->url);
-				$tag = json_decode($tag->body);
+                $message         = str_replace($latestVersion . "\n\n", '', $tag->message);
+                $update->message .= '<small>' . nl2br($message) . '</small><br /><br />';
+                $update->message .= 'Aktuelle Version herunterladen: <a href="' . $downloadLink . '"><code>' . $latestVersion . '</code></a><br />';
+                $update->message .= 'Auf Github anschauen: <a href="https://github.com/joomtools/tidyup_myfiles"><code>joomtools/tidyup_myfiles</code></a><br /></p>';
+            }
+        } else {
+            if ($data->code !== 403) {
+                $update->message .= '<small style="color: red">Konnte nicht nach Aktualisierungen suchen, die Verbindung zum Repository <a href="https://github.com/joomtools/tidyup_myfiles"><code>joomtools/tidyup_myfiles</code></a> war nicht möglich.</small>';
+            }
+        }
 
-				$message         = str_replace($latestVersion . "\n\n", '', $tag->message);
-				$update->message .= '<small>' . nl2br($message) . '</small><br /><br />';
-				$update->message .= 'Aktuelle Version herunterladen: <a href="' . $downloadLink . '"><code>' . $latestVersion . '</code></a><br />';
-				$update->message .= 'Auf Github anschauen: <a href="https://github.com/joomtools/tidyup_myfiles"><code>joomtools/tidyup_myfiles</code></a><br /></p>';
-			}
-		}
-		else if ($data->code !== 403)
-		{
-			$update->message .= '<small style="color: red">Konnte nicht nach Aktualisierungen suchen, die Verbindung zum Repository <a href="https://github.com/joomtools/tidyup_myfiles"><code>joomtools/tidyup_myfiles</code></a> war nicht möglich.</small>';
-		}
+        file_put_contents($updateFile, json_encode($update));
+    }
 
-		file_put_contents($updateFile, json_encode($update));
-	}
-
-	if (version_compare(_VERSION, $update->version, 'lt'))
-	{
-		echo $update->message;
-	}
+    if (version_compare(_VERSION, $update->version, 'lt')) {
+        echo $update->message;
+    }
 }
 
 function removeEmptyDirs($path, $subfolder = false, $debug = false)
 {
-	$dirs = glob($path . "/*", GLOB_ONLYDIR);
+    $dirs = glob($path . "/*", GLOB_ONLYDIR);
 
-	foreach ($dirs as $dir)
-	{
-		$files     = glob($dir . "/*");
-		$innerDirs = glob($dir . "/*", GLOB_ONLYDIR);
+    foreach ($dirs as $dir) {
+        $files     = glob($dir . "/*");
+        $innerDirs = glob($dir . "/*", GLOB_ONLYDIR);
 
-		if (empty($files))
-		{
-			if ($debug === 'off')
-			{
-				if (is_dir($dir) && @!rmdir($dir))
-				{
-					echo "Err: " . $dir . "<br />";
-					continue;
-				}
-			}
+        if (empty($files)) {
+            if ($debug === 'off') {
+                if (is_dir($dir) && @!rmdir($dir)) {
+                    echo "Err: " . $dir . "<br />";
+                    continue;
+                }
+            }
 
-			echo 'Leeres Verzeichnis' . $dir . " wird gelöscht" . "<br />";
+            echo 'Leeres Verzeichnis' . $dir . " wird gelöscht" . "<br />";
 
-			ob_flush();
-			flush();
-		}
-		else if (!empty($innerDirs) && $subfolder === true)
-		{
-			removeEmptyDirs($dir, $subfolder, $debug);
-		}
-	}
+            ob_flush();
+            flush();
+        } else {
+            if (!empty($innerDirs) && $subfolder === true) {
+                removeEmptyDirs($dir, $subfolder, $debug);
+            }
+        }
+    }
 }
