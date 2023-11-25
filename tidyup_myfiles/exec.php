@@ -27,6 +27,7 @@ use Joomla\CMS\Http\HttpFactory;
 use Joomla\CMS\Language\Language;
 use Joomla\CMS\Language\Transliterate;
 use Joomla\CMS\Profiler\Profiler;
+use Joomla\Database\DatabaseInterface;
 use Joomla\Filesystem\File;
 use Joomla\Filesystem\Folder;
 use Joomla\Input\Input;
@@ -43,6 +44,8 @@ if (ob_get_level() == 0) {
     $obFlashStarted = true;
 }
 
+// TODO: Check PHP Version and Joomla Version
+
 /**
  * Version
  */
@@ -54,7 +57,7 @@ const _VERSION        = '2.0.0-dev';
 const _JEXEC          = 1;
 
 /**
- * Tabellennamen ohne Prefix bei denen nur
+ * Tabellennamen ohne Prefix, bei denen nur
  * nach dem Dateinamen gesucht werden soll
  */
 const _ONLY_FILENAMES = array(
@@ -62,11 +65,22 @@ const _ONLY_FILENAMES = array(
 );
 
 /**
- * Tabellennamen ohne Prefix die von der
+ * Tabellennamen ohne Prefix, bei denen die Erweiterung
+ * einen festen Speicherort hat, der nicht in der Datenbank steht.
+ */
+const _EXT_BASE_SAVEPATH = array(
+    'phocagallery' => 'images/phocagallery/',
+);
+
+/**
+ * Tabellennamen ohne Prefix, die von der
  * Suche ausgeschlossen werden können
  */
 const _EXCLUDE_TABLES = array(
     'advancedmodules',
+    'akeebabackup_backups',
+    'akeebabackup_profiles',
+    'akeebabackup_storage',
     'ak_profiles',
     'ak_stats',
     'ak_storage',
@@ -128,9 +142,10 @@ const _EXCLUDE_TABLES = array(
     //	'modules',
     'modules_menu',
     //	'newsfeeds',
-    //	'overrider',
+    'overrider',
     'patchtester_pulls',
     'patchtester_tests',
+    'phocacart_regions',
     'phocamaps_icon',
     'phocamaps_map',
     //	'postinstall_messages',
@@ -181,14 +196,24 @@ define('SCRIPT_BASE', getcwd());
 // Startzeit und Speichernutzung für Auswertung
 $startTime = microtime(1);
 $startMem  = memory_get_usage();
-$date      = date('YmdHi');
+$date      = date('Y-m-d_H.i.s');
 
-@set_time_limit(0);
-@ini_set('max_execution_time', 0);
-@error_reporting(E_ERROR | E_WARNING | E_PARSE & ~E_NOTICE);
+//@error_reporting(E_ERROR | E_WARNING | E_PARSE & ~E_NOTICE);
+@error_reporting(E_ALL);
 @ini_set('display_errors', 1);
-@ini_set('track_errors', 1);
-@ini_set('memory_limit', '256M');
+
+@set_time_limit(3600);
+@ini_set('max_execution_time', 3600);
+@ini_set('memory_limit', '512M');
+
+if (isset($_GET['phpinfo'])) {
+	$phpinfo = filter_var($_GET['phpinfo'], FILTER_VALIDATE_INT);
+
+	if ($phpinfo === 1) {
+		phpinfo();
+		exit;
+	}
+}
 
 // Load system defines
 if (file_exists(dirname(SCRIPT_BASE) . '/defines.php')) {
@@ -739,18 +764,14 @@ if ($rename === false) {
 
     unset($files, $file, $arrFile, $fileParts, $output, $newName, $source, $destination, $relativePath, $relativePathSafe);
 
-    //die;
-
     ob_flush();
     flush();
 
-    $db        = Factory::getDbo();
+    /** @var DatabaseInterface $db */
+    $db        = Factory::getContainer()->get(DatabaseInterface::class);
     $arrTables = $db->getTableList();
-    //	$tblQueries = [];
-    $sql = [];
-
-    // file_put_contents(JPATH_ROOT . '/cli/tabellen.txt', implode("\n", $arrTables));
-    // die;
+    $sql       = [];
+    $newSql    = [];
 
     if (!empty($arrFiles)) {
         echo '<h2>Starte Suche nach Datein in der Datenbank ....</h2>';
@@ -761,6 +782,10 @@ if ($rename === false) {
             $strTblWithoutPrefix = str_replace($db->getPrefix(), '', $strTable);
 
             if (in_array($strTblWithoutPrefix, _EXCLUDE_TABLES)) {
+                continue;
+            }
+
+            if ($strTblWithoutPrefix != 'j2store_customfields') {
                 continue;
             }
 
@@ -792,7 +817,7 @@ if ($rename === false) {
             flush();
 
             $teiler = (count($tblRows) / 80);
-            $teiler = $teiler < 1 ? 1 : $teiler;
+            $teiler = $teiler < 1 ? 1 : (int) $teiler;
 
             foreach ($tblRows as $tblRow) {
                 if ($search % $teiler === 0) {
@@ -809,24 +834,6 @@ if ($rename === false) {
                         continue;
                     }
 
-                    $valSerialized = false;
-                    $valJson       = false;
-                    $tmp           = @json_decode($value);
-
-                    if ($tmp !== null) {
-                        $valJson = true;
-                        $value   = $tmp;
-                    }
-
-                    if ($valJson === false) {
-                        $tmp = @unserialize($value);
-
-                        if ($tmp !== false) {
-                            $valSerialized = true;
-                            $value         = $tmp;
-                        }
-                    }
-
                     $dbChanged = false;
 
                     foreach ($arrFiles as $fileKey => $fileParams) {
@@ -834,13 +841,16 @@ if ($rename === false) {
                         $fileSrc    = $fileParams['src'];
                         $fileDest   = $fileParams['dest'];
 
+                        if ($path === true && array_key_exists($strTblWithoutPrefix, _EXT_BASE_SAVEPATH)
+                            && str_contains($fileSrc, _EXT_BASE_SAVEPATH[$strTblWithoutPrefix])
+                        ) {
+                            $fileSrc  = str_replace(_EXT_BASE_SAVEPATH[$strTblWithoutPrefix], '', $fileSrc);
+                            $fileDest = str_replace(_EXT_BASE_SAVEPATH[$strTblWithoutPrefix], '', $fileDest);
+                        }
+
                         if (in_array($strTblWithoutPrefix, _ONLY_FILENAMES) || $path === false) {
                             $fileSrc  = basename($fileParams['src']);
                             $fileDest = basename($fileParams['dest']);
-                        }
-
-                        if (is_object($value)) {
-                            $value = get_object_vars($value);
                         }
 
                         if (findFileInData($fileSrc, $value) === true) {
@@ -878,14 +888,6 @@ if ($rename === false) {
                     $valChanged = $value;
                     $value      = $tblRow[$column];
 
-                    if ($valSerialized) {
-                        $valChanged = serialize($valChanged);
-                    }
-
-                    if ($valJson) {
-                        $valChanged = json_encode($valChanged);
-                    }
-
                     if ($rename === true) {
                         $tableQuery = $db->getQuery(true);
 
@@ -893,8 +895,8 @@ if ($rename === false) {
                             ->set($db->qn($column) . '=' . $db->q($valChanged))
                             ->where($db->qn($column) . '=' . $db->q($value));
 
-                        // $tblQueries[$strTable][] = htmlspecialchars((string) $tableQuery);
                         $sql[] = (string) $tableQuery;
+                        $newSql[] = $tableQuery;
                     }
                 }
             }
@@ -934,13 +936,25 @@ if ($rename === false) {
             ob_flush();
             flush();
 
-            $config = Factory::getConfig();
+            try {
+                foreach ($newSql as $query) {
+                    $db->setQuery($query)->execute();
+                }
+            } catch (RuntimeException $e) {
+                echo $e->getMessage();
+                ob_end_flush();
+                die;
+            }
+
+            /*
+            $config = Factory::getApplication()->getConfig();
             $mysql  = shell_exec("mysql --user=" . $config->get('user')
                                  . " --password=" . $config->get('password')
                                  . " --host=" . $config->get('host')
                                  . " " . $config->get('db')
-                                 . " < " . SCRIPT_BASE . "/datenbank.sql"
+                                 . " < " . SCRIPT_BASE . "/" . $date . "_datenbank.sql"
             );
+            */
 
             if (!empty($mysql)) {
                 print_r($mysql);
@@ -972,7 +986,7 @@ if ($rename === false) {
         $destFile = $file['dest'];
 
         if ($file['delete'] === true) {
-            $destFile = 'tidyup_myfiles/to_delete/' . $file['src'];
+            $destFile = 'tidyup_myfiles/to_delete/' . $date . '/' . $file['src'];
 
             $output['delete'][] = 'Datei <strong>' . $file['src'] . '</strong> verschoben nach <strong>' . $destFile . '</strong>.<br />';
         }
@@ -1104,24 +1118,12 @@ function array_strpos($arrHaystack, $strNeedle)
  */
 function findFileInData($fileSrc, $data)
 {
-    if (is_array($data)) {
-        foreach ($data as $v) {
-            if (is_object($v)) {
-                $v = get_object_vars($v);
-            }
-
-            if (is_array($v) && findFileInData($fileSrc, $v)
-                || !is_array($v) && strpos($v, $fileSrc) !== false
-            ) {
-                return true;
-            }
-        }
-
-        return false;
+    if (@json_decode($data) !== null || @unserialize($data) !== false) {
+        $fileSrc = str_replace('"', '', json_encode($fileSrc));
     }
 
-    if (strpos($data, $fileSrc) !== false) {
-        return true;
+    if (str_contains($data, $fileSrc)) {
+      return true;
     }
 
     return false;
@@ -1137,13 +1139,20 @@ function findFileInData($fileSrc, $data)
  */
 function replaceInData($v, $fileSrc, $fileDest)
 {
-    if (is_array($v)) {
-        $w = array_str_replace($fileSrc, $fileDest, $v);
-    } else {
-        $w = str_replace($fileSrc, $fileDest, $v);
+    if (@json_decode($v) !== null || @unserialize($v) !== false) {
+        $fileSrc = str_replace('"', '', json_encode($fileSrc));
+        $fileDest = str_replace('"', '', json_encode($fileDest));
     }
 
-    return $w;
+    $w = str_replace($fileSrc, $fileDest, $v);
+
+    if (@unserialize($v) !== false) {
+        if (count($v) != count($w)) {
+            return false;
+        }
+    }
+
+        return $w;
 }
 
 /**
