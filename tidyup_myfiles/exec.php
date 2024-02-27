@@ -77,6 +77,10 @@ const _EXT_BASE_SAVEPATH = array(
  * Suche ausgeschlossen werden können
  */
 const _EXCLUDE_TABLES = array(
+    'action_logs',
+    'action_logs_extensions',
+    'action_logs_users',
+    'action_log_config',
     'advancedmodules',
     'akeebabackup_backups',
     'akeebabackup_profiles',
@@ -149,7 +153,7 @@ const _EXCLUDE_TABLES = array(
     'phocamaps_icon',
     'phocamaps_map',
     //	'postinstall_messages',
-    //	'redirect_links',
+    'redirect_links',
     'rsgallery2_config',
     'schemas',
     'session',
@@ -782,10 +786,6 @@ if ($rename === false) {
             $strTblWithoutPrefix = str_replace($db->getPrefix(), '', $strTable);
 
             if (in_array($strTblWithoutPrefix, _EXCLUDE_TABLES)) {
-                continue;
-            }
-
-            if ($strTblWithoutPrefix != 'j2store_customfields') {
                 continue;
             }
 
